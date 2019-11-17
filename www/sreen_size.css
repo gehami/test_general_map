@@ -1,0 +1,269 @@
+
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Open+Sans|Raleway|Roboto|Roboto+Condensed&display=swap');
+
+
+/*Action button classes*/
+/*btn btn-default action-button shiny-bound-input*/
+
+/*actionBttn classes: bttn bttn-unite*/
+.bttn p{
+  margin-bottom: 0;
+}
+
+
+
+#home_button {
+  background: #fff;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 900;
+  margin-top: 1vh;
+  margin-left: 1vh;
+}
+
+
+
+
+
+@media only screen and (max-width: 769px){
+  .no_small_screen{
+      display: none;
+  }
+  #map_container {
+    height: 100vh;
+  }
+  
+}
+@media only screen and (min-width: 770px){
+  .no_big_screen{
+      display: none;
+  }
+  #map_container {
+    height: 85vh;
+  }
+}
+
+
+#map_container{
+  width: 100%;
+  position: relative;
+  text-align: center;
+  display: flex;
+}
+
+
+.popup {
+  left: 30%;
+  /*margin-top: 20%;*/
+  top: 40%;
+  padding: 30px;
+  background: #fff;
+  border-radius: 5px;
+  width: 40%;
+  position: absolute;
+  z-index: 1000;
+}
+
+.popup_text {
+  margin-top: 0;
+  color: #333;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.popup .close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  transition: all 200ms;
+  font-size: 30px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+.popup .close:hover {
+  color: #06D85F;
+}
+.popup .content {
+  max-height: 30%;
+  overflow: auto;
+}
+
+
+#map_tile_popup{
+  left: 0;
+  top: 60%;
+}
+
+
+@media screen and (max-width: 700px){
+  .popup{
+    width: 70%;
+    left: 0;
+  }
+ #legend_popup{
+    left: 30%;
+    top: 40%;
+  }
+  
+  #layer_and_metrics_popup{
+    left: 0;
+    top: 5%;
+  }
+  
+  #home_popup{
+    right: 0;
+    left: auto;
+    top: 5%;
+  }
+}
+
+@media screen and (min-width: 700px){
+  
+  #legend_popup{
+    left: 60%;
+    top: 40%;
+  }
+  
+  #layer_and_metrics_popup{
+    left: 30%;
+    top: 5%;
+  }
+  
+  #home_popup{
+    left: 30%;
+    top: 5%;
+  }
+}
+
+
+#select_year_div {
+  position: absolute;
+  right: 1vw;
+  max-width: 17vw;
+  top: 1vh;
+}
+
+
+#return_help_popup {
+  left: 1vh;
+  /*margin-top: 20%;*/
+  top: 85%;
+  height: auto;
+  width: auto;
+  padding: 6px 10px 0 10px;
+  background: #fff;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 1000;
+  text-align: center;
+}
+.help_popup .re_open {
+  position: static;
+  transition: all 200ms;
+  font-size: 5vmin;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+.help_popup .re_open:hover {
+  color: #06D85F;
+}
+
+
+
+.factor_selector{
+  margin-bottom: 2vh;
+  margin-left: 1vw;
+  margin-right: 1vw;
+  text-align: center;
+  display: inline-block;
+}
+
+.warning_text{
+  color: red;
+}
+
+.splash_front{
+/*  background-image: url("City - San Diego.jpg");
+  background-color: rgba(2, 2, 109, 0.1);*/
+  /*height: 50vh;*/
+  margin-bottom: 5vh;
+  background-repeat: no-repeat;
+  text-align: center;
+  max-width: 800px;
+  display: inline-block;
+  
+
+}
+
+.center_wrapper{
+  text-align: center;
+}
+
+.splash_text{
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  
+}
+
+
+.shiny-notification{
+  position: fixed;
+  top: 80vh;
+  left: 0;
+  right: 0;
+
+}
+
+
+
+
+/*
+Leaflet classes
+*/
+
+/*layer controls: leaflet-control-layers-selector, leaflet-control-layers-base, leaflet-control-layers-list, leaflet-control-layers-expanded
+Legend classes: info, legend, leaflet-control
+credits classes: leaflet-control-attribution, leaflet-control
+
+Corner classes: leaflet-top leaflet-right leaflet-left leaflet-bottom (combos of these make the corners)
+
+popup class: leaflet-popup-content-wrapper, leaflet-popup,  leaflet-zoom-animated
+
+drop-down menu: panel panel-info
+
+*/
+
+/*Testing borders*/
+
+
+/*Adding the border animation to any outline*/
+@keyframes animateBorder {
+  to {
+    outline-color: #EA3556;
+    box-shadow: 0 0 0 6px blue
+  }
+}
+
+
+.highlight-border{
+  outline: 6px dashed blue;
+  box-shadow: 0 0 0 6px #EA3556;
+  animation: 1s animateBorder infinite;
+}
+
+/*.leaflet-popup-content{
+  outline: 6px dashed blue;
+  box-shadow: 0 0 0 6px #EA3556;
+  animation: 1s animateBorder infinite;
+}*/
+
+
+
+
+
+
+
+
+
+
+

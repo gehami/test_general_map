@@ -1,0 +1,91 @@
+####### Violence risk factors #######
+c(
+#sleep debt --> higher delinquency rates: https://www.ncbi.nlm.nih.gov/pubmed/24085558
+sleep_crudeprev, "Sleep <7 hours", #sleep less than 7 hours a night 18+
+#binge drinking --> associated with crime - https://www.ph.ucla.edu/sciprc/pdf/ALCOHOL_AND_VIOLENCE.pdf. 4/10 violent crimes involve alcohol
+binge_crudeprev, "Binge drinking", #binge drinking prevelance 18+
+#mental health seems to combine with substance abuse to contribute to violence --> https://www.health.harvard.edu/newsletter_article/mental-illness-and-violence
+mhlth_crudeprev, "Poor mental health", #FOOTNOTE: mental health deemed "not good" for 14+ days among adults (18+)
+#low education is a strong predictor of delinquency - https://www.tandfonline.com/doi/abs/10.1080/00036840701604412
+DP02_0066P, "% HS Grad", #% HS grad or higher 25+
+#young single parents THESE ARE ALL FROM THE FULL ACS:
+B17017_011 #male no wife <25 below poverty
++
+B17017_016 #female no husband <25 below poverty
++
+B17017_040 #male no wife <25 above poverty
++
+B17017_045 #female no husband <25 above poverty
+)
+
+
+B09010_005 #male no wife family living on Social security or SNAP
+B09010_006 #female no husband family living on Social security or SNAP
+B09019_036 #foster children
+
+###### CDC ###########
+c(
+#violence risk factors CDC
+binge_crudeprev, "Binge drinking", #binge drinking prevelance 18+
+csmoking_crudeprev, "Smoking", #smoking 18+
+mhlth_crudeprev, "Poor mental health", #FOOTNOTE: mental health deemed "not good" for 14+ days among adults (18+)
+sleep_crudeprev, "Sleep <7 hours", #sleep less than 7 hours a night 18+
+#
+#health risk factors CDC
+access2_crudeprev, "Lack health care", #lack of health insurance 18-64
+lpa_crudeprev, "No physical activity", #FOOTNOTE: no leisure-time physical activity (off-the-job physical activity) 18+
+dental_crudeprev, "Lack dental care", #MINUS 1 & FOOTNOTE: using dental care 18+
+phlth_crudeprev, "Poor physical health", #FOOTNOTE: physical health not good 14+ days among adults (18+)
+obesity_crudeprev, "Obesity", #obesity 18+
+bphigh_crudeprev, "High blood pressure", #high blood pressure 18+
+diabetes_crudeprev, "Diabetes", #diabetes 18+
+highchol_crudeprev, "High cholesterol", #high cholesterol of those screened in last 5 years 18+
+casthma_crudeprev, "Asthma", #asthma
+arthritis_crudeprev, "Arthritis", #arthiritis 18+
+chd_crudeprev, "Heart disease", #coronary heart disease (heart disease) 18+
+cancer_crudeprev, "Cancer", #cancer (minus skin cancer) 18+
+)
+
+
+####### ACS Subject #########
+c(
+#education stats
+DP02_0067P, "% with BA", #% with BA or higher 25+
+DP02_0066P, "% HS Grad", #% HS grad or higher 25+
+#social/family
+DP02_0006P, "% single fathers", #ADD TO DP02_0008P: %Male householder no wife present family
+DP02_0008P, "% single mothers", #ADD TO DP02_0006P: %Female householder no husband present family
+#Veteran stats
+DP02_0069P, "% Veterans", #% veterans 18+
+#disability status
+DP02_0071P, "% with a disability", #% disability Total pop
+DP02_0072P, "% Youth with a disability", #% disability <18
+#new residents
+DP02_0082P, "% from different US county", #% residents from a different county in the US 1 year ago
+DP02_0084P, "% from different US state", #% residents from a different state in the US 1 year ago
+DP02_0085P, "% from outside US", #% residents from a different country 1 year ago
+DP02_0093P, "% foreign-born", #% born outside US
+DP02_0112P, "% non-english at home", #% who don't speak english at home 5+
+DP02_0113P, "% poor english", #CHECK IF % OF TOTAL POP OR % OF DP02_0112P: % who don't speak english at home who don't speak english well
+#Economic
+DP03_0062, "Median household income", #median household income 2017 adjusted dollars
+DP03_0009P, "% unemployed", #unemployment rate 16s+
+DP03_0002P, "% in labor force", #Labor force 16+
+DP03_0119, "% households under poverty line", #% families and people whose income is under the poverty line
+DP03_0129, % childeren in poverty", #% under 18 in poverty <18
+#transit
+DP03_0021P, "% public transit to work", #public transit to work excluding taxi cab 16+
+DP03_0022P, "% walk to work", #walk to work 16+
+DP03_0025, "Mean commute time", #mean commute to work for commute
+#housing
+DP04_0047P, "% renter", #% of household units occupied by renters
+DP04_0046P, "% owner", #% of household units occupied by owners
+#household amenities
+DP02_0151P, "% without a computer", #MINUS 1: households with a computer
+DP02_0152P, "% without broadband", #MINUS 1: households with broadband internet
+DP04_0075P, "% without telephone service", #households with no telephone service. Does not need to be subtracted from 1. 
+DP04_0073P, "% lacking plumbing #%Lacking, complete plumbing facilities
+
+)
+
+
