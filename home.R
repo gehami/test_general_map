@@ -803,7 +803,7 @@ observeEvent(input$map_it,{
     inputs[['at-risk_factors']] <- input$violence_factors
     inputs[['qol_factors']] <- input$qol_factors
     print(inputs)
-    saveRDS(inputs, 'inputs_outputs/home_inputs.rds')
+    # saveRDS(inputs, 'inputs_outputs/home_inputs.rds')
     # inputs = readRDS('inputs_outputs/home_inputs.rds')
     
     
