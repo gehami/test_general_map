@@ -9,6 +9,12 @@
 inputs = readRDS('inputs_outputs/home_inputs.rds')
 # print(inputs)
 
+# saveRDS(city_all_spdf_hash, file = 'inputs_outputs/city_all_spdf_hash.rds')
+# saveRDS(data_code_book, file = 'inputs_outputs/data_code_book.rds')
+# saveRDS(risk_vars, file = 'inputs_outputs/risk_vars.rds')
+# saveRDS(data_factors, file = 'inputs_outputs/data_factors.rds')
+# saveRDS(initial_map, file = 'inputs_outputs/initial_map.rds')
+# saveRDS(past_spdf[1,], file = 'inputs_outputs/example_past_spdf.rds')
 
 
 city_all_spdf_hash = readRDS(file = 'inputs_outputs/city_all_spdf_hash.rds')
@@ -17,7 +23,6 @@ risk_vars = readRDS(file = 'inputs_outputs/risk_vars.rds')
 data_factors = readRDS(file = 'inputs_outputs/data_factors.rds')
 initial_map = readRDS(file = 'inputs_outputs/initial_map.rds')
 example_past_spdf = readRDS(file = 'inputs_outputs/example_past_spdf.rds')
-
 
 ########## UI ##############
 
@@ -231,28 +236,44 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
     if(length(risk_var_cats) < 2){
       for(n in seq_along(risk_vars)){
         
+        # if(front_name){
+        # label_string = c(label_string, paste0('<small class = "no_small_screen">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
+        #                                       round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
+        #                                       get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
+        # }else{
+        #   label_string = c(label_string, paste0('<small class = "no_small_screen">', round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
+        #                                         data_code_book$back_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' (',
+        #                                         get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
+        # }
         if(front_name){
-          label_string = c(label_string, paste0('<small class = "no_small_screen">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
+          label_string = c(label_string, paste0('<small class = "phone_popup">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
                                                 round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
                                                 get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
         }else{
-          label_string = c(label_string, paste0('<small class = "no_small_screen">', round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
+          label_string = c(label_string, paste0('<small class = "phone_popup">', round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
                                                 data_code_book$back_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' (',
                                                 get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
         }
         
         
       }
+      # full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score),
+      #                       "%ile</b>", '<br class = "no_big_screen">'), label_string)
       full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score),
-                            "%ile</b>", '<br class = "no_big_screen">'), label_string)
-      label_list = c(label_list, paste(full_label, collapse = '<br class = "no_small_screen">')) 
+                            "%ile</b>"), label_string)
+      # label_list = c(label_list, paste(full_label, collapse = '<br class = "no_small_screen">')) 
+      label_list = c(label_list, paste(full_label, collapse = '<br>')) 
+      
       
     }else{
       for(risk_cat in risk_var_cats){
         # risk_cat = risk_var_cats[1]
         cat_score = risk_cats_quantiles[row_ind,risk_cat]
         label_string = c(label_string, paste0('<i>', risk_var_cats_name_conversion$display_names[risk_var_cats_name_conversion$cats == risk_cat],
-                                              ': ', as.character(cat_score), '%ile</i><br class = "no_big_screen">'))
+                                              ': ', as.character(cat_score),
+                                              # '%ile</i><br class = "no_big_screen">'
+                                              '%ile</i>'
+        ))
         
         interest_vars = risk_vars[grep(risk_cat, names(risk_vars))]
         if(front_name){
@@ -264,22 +285,30 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         for(sub_vars_ind in seq_len(length(interest_vars))){
           if(front_name){
             label_string = c(label_string, 
-                             paste0('<small class = "no_small_screen">', display_var_names[sub_vars_ind], ': ', 
-                                    round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% (', 
-                                    get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
+                             paste0(#'<small class = "no_small_screen">',
+                               '<small class = "phone_popup">',
+                               display_var_names[sub_vars_ind], ': ', 
+                               round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% (', 
+                               get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
             )
           }else{
             label_string = c(label_string, 
-                             paste0('<small class = "no_small_screen">',  
-                                    round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% ', display_var_names[sub_vars_ind], ' (',
-                                    get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
+                             paste0(#'<small class = "no_small_screen">',
+                               '<small class = "phone_popup">',
+                               round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% ', display_var_names[sub_vars_ind], ' (',
+                               get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
             )
           }
         }
       }
       full_label = c(paste0("<b>Overall risk metric: ", 
-                            get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score), "%ile</b>", '<br class = "no_big_screen">'), label_string)
-      label_list = c(label_list, paste(full_label, collapse = '<br class = "no_small_screen">'))
+                            get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score), "%ile</b>"#, 
+                            #'<br class = "no_big_screen">'
+      ), label_string)
+      label_list = c(label_list, paste(full_label, 
+                                       # collapse = '<br class = "no_small_screen">'
+                                       collapse = '<br>'
+      ))
     }
   }
   return(label_list)

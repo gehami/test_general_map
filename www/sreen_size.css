@@ -22,7 +22,15 @@
 }
 
 
+.leaflet-popup-content{
+  max-height: 70vh;
+  overflow-y: auto;
+  max-width: 90vw;
+}
 
+small.phone_popup{
+  font-size: 90%;
+}
 
 
 @media only screen and (max-width: 769px){
