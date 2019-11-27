@@ -32,6 +32,23 @@ small.phone_popup{
   font-size: 90%;
 }
 
+#preset_buttons{
+  vertical-align: middle;
+}
+
+.bttn-unite:after, .bttn-unite:before{
+  content: none;
+}
+.bttn-unite{
+  margin: 10px;
+}
+
+
+#factor_selector{
+  vertical-align: middle;
+}
+
+
 
 @media only screen and (max-width: 769px){
   .no_small_screen{
@@ -55,12 +72,12 @@ small.phone_popup{
 #map_container{
   width: 100%;
   position: relative;
-  text-align: center;
   display: flex;
 }
 
 
 .popup {
+  text-align: center;
   left: 30%;
   /*margin-top: 20%;*/
   top: 40%;
@@ -188,6 +205,7 @@ small.phone_popup{
 
 .warning_text{
   color: red;
+  font-style: italic;
 }
 
 .splash_front{
@@ -247,16 +265,17 @@ drop-down menu: panel panel-info
 /*Adding the border animation to any outline*/
 @keyframes animateBorder {
   to {
-    outline-color: #EA3556;
-    box-shadow: 0 0 0 6px blue
+    outline-color: #C0C0C0;
+    box-shadow: 0 0 0 6px #787878
   }
 }
 
 
 .highlight-border{
-  outline: 6px dashed blue;
-  box-shadow: 0 0 0 6px #EA3556;
+  outline: 6px #787878;
+  box-shadow: 0 0 0 6px #C0C0C0;
   animation: 1s animateBorder infinite;
+  border-radius: 5px;
 }
 
 /*.leaflet-popup-content{

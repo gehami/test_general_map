@@ -516,70 +516,60 @@ output$pageStub <- renderUI(tagList(
                          onInitialize = I(paste0('function() { this.setValue(""); }'))
                        )),
         uiOutput('select_city')
-           # selectizeInput(
-           #   'city', HTML('Search for your city </br><small>(Largest 500 US cities only)</small>'), choices = c(cities_cdc), multiple = FALSE,
-           #   options = list(
-           #     placeholder = 'Enter City name',
-           #     onInitialize = I(paste0('function() { this.setValue("',paste(location, collapse = ','),'"); }')),
-           #     maxOptions = 10
-           #   )
-           # )
            )
   ),
   fluidRow(column(12,
                   h3('Select a preset group of metrics'),
                   uiOutput('preset_buttons'),
                   h3('Or customize your metrics of interest'),
-
-                  
-                  div(class = "factor_selector", 
-                    dropdownButton(
-                    checkboxInput('all_health_factors', "Select all"),
-                    checkboxGroupInput(
-                      'health_factors', 'Community health factors',
-                      choices = HEALTH_CHOICES,
-                      selected = health_risk_factors
-                    ),
-                    label = 'Community health factors',
-                    circle = FALSE
-                  )),
-                  div(class = "factor_selector",
-                    dropdownButton(
-                    checkboxInput('all_economic_factors', "Select all"),
-                    checkboxGroupInput(
-                      'economic_factors', 'Economic factors',
-                      choices = ECONOMIC_CHOICES,
-                      selected = economic_factors
-                    ),
-                    label = 'Economic factors',
-                    circle = FALSE
-                  )),
-                  div(class = "factor_selector",
-                      dropdownButton(
-                        checkboxInput('all_violence_factors', "Select all", value = FALSE),
-                        checkboxGroupInput(
-                          'violence_factors', 'At-risk factors',
-                          choices = VIOLENCE_CHOICES, selected = violence_risk_factors
-                        ),
-                        label = 'At-risk factors',
-                        circle = FALSE
-                  )),
-                  div(class = "factor_selector",
-                    dropdownButton(
-                    checkboxInput('all_qol_factors', "Select all"),
-                    checkboxGroupInput(
-                      'qol_factors', 'Other quality-of-life factors',
-                      choices = QOL_CHOICES, 
-                      selected = qol_factors
-                    ),
-                    label = 'Quality-of-life factors',
-                    circle = FALSE
-                  )),
-                  # sliderInput('year_range', 'Which years should we look at?',
-                  #             YEAR_RANGE[1], YEAR_RANGE[2], value = year_range),
-                  
+                  div(id = 'factor_selectors', 
+                      div(class = "factor_selector", 
+                          dropdownButton(
+                            checkboxInput('all_health_factors', "Select all"),
+                            checkboxGroupInput(
+                              'health_factors', 'Community health factors',
+                              choices = HEALTH_CHOICES,
+                              selected = health_risk_factors
+                            ),
+                            label = 'Community health factors',
+                            circle = FALSE
+                          )),
+                      div(class = "factor_selector",
+                          dropdownButton(
+                            checkboxInput('all_economic_factors', "Select all"),
+                            checkboxGroupInput(
+                              'economic_factors', 'Economic factors',
+                              choices = ECONOMIC_CHOICES,
+                              selected = economic_factors
+                            ),
+                            label = 'Economic factors',
+                            circle = FALSE
+                          )),
+                      div(class = "factor_selector",
+                          dropdownButton(
+                            checkboxInput('all_violence_factors', "Select all", value = FALSE),
+                            checkboxGroupInput(
+                              'violence_factors', 'At-risk factors',
+                              choices = VIOLENCE_CHOICES, selected = violence_risk_factors
+                            ),
+                            label = 'At-risk factors',
+                            circle = FALSE
+                          )),
+                      div(class = "factor_selector",
+                          dropdownButton(
+                            checkboxInput('all_qol_factors', "Select all"),
+                            checkboxGroupInput(
+                              'qol_factors', 'Other quality-of-life factors',
+                              choices = QOL_CHOICES, 
+                              selected = qol_factors
+                            ),
+                            label = 'Quality-of-life factors',
+                            circle = FALSE
+                          ))
+                      # sliderInput('year_range', 'Which years should we look at?',
+                      #             YEAR_RANGE[1], YEAR_RANGE[2], value = year_range),
+                      ),
                   actionBttn('map_it', 'Map it'),
-                  # actionButton('map_it', 'Map it'),
                   uiOutput('input_warning'),
                   uiOutput('loading_sign')
 
@@ -806,9 +796,9 @@ output$input_warning <- renderUI(HTML("<h5>This process may take up to 60 second
 observeEvent(input$map_it,{
   if(is.null(c(input$violence_factors, input$health_factors, input$economic_factors, input$qol_factors)) & !clicked_preset()){
     print("no factors present")
-    output$input_warning <- renderUI(h5("Please select at least 1 risk factor from the 4 drop-down menus above", class = "warning_text"))
+    output$input_warning <- renderUI(h4("Please select at least 1 risk factor from the 4 drop-down menus above", class = "warning_text"))
   }else if(is.null(input$city) | input$city == ''){
-    output$input_warning <- renderUI(h5("Please select a city", class = "warning_text"))
+    output$input_warning <- renderUI(h4("Please select a city", class = "warning_text"))
   }else{
     shinyjs::disable('map_it')
     
