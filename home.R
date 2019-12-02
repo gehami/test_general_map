@@ -72,6 +72,7 @@ get_percentile = function(vec, compare_vec = NULL){
 #To have the top observation be marked as the 100%ile, set ret_100_ile == TRUE. 
 #To return a factor variable, ret_factor == TRUE, otherwise it will return a numeric vector. 
 get_quantile = function(vec, quantile_bins, ret_factor = TRUE, ret_100_ile = FALSE, compare_vec = NULL){
+  
   quantile_bins = round(min(max(quantile_bins, 2), 100)) #ensuring the quantile bins is an integer between 2 and 100
   quant_val = floor(get_percentile(vec, compare_vec)*100 / (100/quantile_bins)) * (100/quantile_bins)
   if(!ret_100_ile){ 
@@ -184,7 +185,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
     }
     risk_cats_quantiles = risk_cats_scores
     for(n in seq_len(ncol(risk_cats_quantiles))){
-      risk_cats_quantiles[,n] = get_quantile(risk_cats_scores[,n], quantile_bins = quantile_bins)
+      risk_cats_quantiles[,n] = suppressWarnings(get_quantile(risk_cats_scores[,n], quantile_bins = quantile_bins))
     }
   }
   
@@ -206,18 +207,18 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         if(front_name){
           label_string = c(label_string, paste0('<small class = "phone_popup">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
                                                 round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
-                                                get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
+                                                suppressWarnings(get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins))[row_ind], '%ile)</small>'))
         }else{
           label_string = c(label_string, paste0('<small class = "phone_popup">', round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
                                                 data_code_book$back_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' (',
-                                                get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
+                                                suppressWarnings(get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins))[row_ind], '%ile)</small>'))
         }
         
 
       }
       # full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score),
       #                       "%ile</b>", '<br class = "no_big_screen">'), label_string)
-      full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score),
+      full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>"), label_string)
       # label_list = c(label_list, paste(full_label, collapse = '<br class = "no_small_screen">')) 
       label_list = c(label_list, paste(full_label, collapse = '<br>')) 
@@ -247,20 +248,20 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
                                     '<small class = "phone_popup">',
                                     display_var_names[sub_vars_ind], ': ', 
                                     round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% (', 
-                                    get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
+                                    suppressWarnings(get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins))[row_ind], '%ile)', '</small>')
             )
           }else{
             label_string = c(label_string, 
                              paste0(#'<small class = "no_small_screen">',
                                     '<small class = "phone_popup">',
                                     round(spdf@data[row_ind,interest_var_names[sub_vars_ind]]), '% ', display_var_names[sub_vars_ind], ' (',
-                                    get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins)[row_ind], '%ile)', '</small>')
+                                    suppressWarnings(get_quantile(spdf@data[,interest_var_names[sub_vars_ind]], quantile_bins = quantile_bins))[row_ind], '%ile)', '</small>')
             )
           }
         }
       }
       full_label = c(paste0("<b>Overall risk metric: ", 
-                            get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score), "%ile</b>"#, 
+                            suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>"#, 
                             #'<br class = "no_big_screen">'
                             ), label_string)
       label_list = c(label_list, paste(full_label, 
@@ -412,7 +413,7 @@ get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars
   pred_score_fixed = pred_score/division_factor
   pred_score_fixed[pred_score_fixed < 0] = 0
   
-  pred_score_quantile = get_quantile(pred_score_fixed, quantile_bins = quantile_bins)
+  pred_score_quantile = suppressWarnings(get_quantile(pred_score_fixed, quantile_bins = quantile_bins))
   
   pred_score_label = paste0("Predicted overall risk metric 2020: <br/><b>", pred_score_quantile, "%ile</b>")
   
@@ -436,9 +437,9 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   
   TRACT_PAL = 'RdYlGn'
   TRACT_OPACITY = .7
-  tract_color_vals = get_quantile(present_spdf@data$score, quantile_bins = quantile_bins)
-  past_tract_color_vals = get_quantile(past_spdf@data$score, quantile_bins = quantile_bins)
-  future_tract_color_vals = get_quantile(present_spdf@data$pred_score, quantile_bins = quantile_bins)
+  tract_color_vals = suppressWarnings(get_quantile(present_spdf@data$score, quantile_bins = quantile_bins))
+  past_tract_color_vals = suppressWarnings(get_quantile(past_spdf@data$score, quantile_bins = quantile_bins))
+  future_tract_color_vals = suppressWarnings(get_quantile(present_spdf@data$pred_score, quantile_bins = quantile_bins))
   
   tract_pal = colorFactor(
     palette = TRACT_PAL, 
@@ -1043,9 +1044,9 @@ observeEvent(input$map_it,{
               div(id = 'select_year_div', pickerInput('select_year',
                                                       choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                   as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
-                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = 'auto'))
+                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'))
           )
-        )
+        ),id = 'results_page'
       )
       
     ))
