@@ -50,6 +50,7 @@ MIN_SLIDER_STEP = 0.5
 
 
 ######## custom JS ######
+# Allows you to move people to a new page via the server
 redirect_jscode <- "Shiny.addCustomMessageHandler('mymessage', function(message) {window.location = '?map';});"
 
 
@@ -195,15 +196,6 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
     if(length(risk_var_cats) < 2){
       for(n in seq_along(risk_vars)){
         
-        # if(front_name){
-        # label_string = c(label_string, paste0('<small class = "no_small_screen">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
-        #                                       round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
-        #                                       get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
-        # }else{
-        #   label_string = c(label_string, paste0('<small class = "no_small_screen">', round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
-        #                                         data_code_book$back_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' (',
-        #                                         get_quantile(spdf@data[,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]], quantile_bins = quantile_bins)[row_ind], '%ile)</small>'))
-        # }
         if(front_name){
           label_string = c(label_string, paste0('<small class = "phone_popup">',data_code_book$front_name[data_code_book$risk_factor_name == risk_vars[n]][1], ' :', 
                                                 round(spdf@data[row_ind,data_code_book$Name[data_code_book$risk_factor_name == risk_vars[n]]]), '% ', 
@@ -216,21 +208,16 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         
 
       }
-      # full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score),
-      #                       "%ile</b>", '<br class = "no_big_screen">'), label_string)
       full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>"), label_string)
-      # label_list = c(label_list, paste(full_label, collapse = '<br class = "no_small_screen">')) 
       label_list = c(label_list, paste(full_label, collapse = '<br>')) 
       
       
     }else{
       for(risk_cat in risk_var_cats){
-        # risk_cat = risk_var_cats[1]
         cat_score = risk_cats_quantiles[row_ind,risk_cat]
         label_string = c(label_string, paste0('<i>', risk_var_cats_name_conversion$display_names[risk_var_cats_name_conversion$cats == risk_cat],
                                               ': ', as.character(cat_score),
-                                              # '%ile</i><br class = "no_big_screen">'
                                               '%ile</i>'
                                               ))
         
@@ -261,9 +248,12 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         }
       }
       full_label = c(paste0("<b>Overall risk metric: ", 
-                            suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>"#, 
+                            suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
-                            ), label_string)
+                            HTML('<div class = "info-popup" onclick = "popupFunction()">',
+                                 '<i class="fa fa-info-circle"></i>',
+                                 '<span class = "info-popuptext" id = "myInfoPopup">Testing</span>',
+                                 '</div>')), label_string)
       label_list = c(label_list, paste(full_label, 
                                        # collapse = '<br class = "no_small_screen">'
                                        collapse = '<br>'
@@ -850,9 +840,7 @@ observeEvent(input$map_it,{
     inputs[['at-risk_factors']] <- input$violence_factors
     inputs[['qol_factors']] <- input$qol_factors
     print(inputs)
-    # saveRDS(inputs, 'inputs_outputs/home_inputs.rds')
-    # inputs = readRDS('inputs_outputs/home_inputs.rds')
-    
+
     
     ###### opening files and doing the things ######
     ####### Reading in data ########
@@ -991,13 +979,7 @@ observeEvent(input$map_it,{
     example_past_spdf_react(past_spdf[1,])
     
     
-    # saveRDS(city_all_spdf_hash, file = 'inputs_outputs/city_all_spdf_hash.rds')
-    # saveRDS(data_code_book, file = 'inputs_outputs/data_code_book.rds')
-    # saveRDS(risk_vars, file = 'inputs_outputs/risk_vars.rds')
-    # saveRDS(data_factors, file = 'inputs_outputs/data_factors.rds')
-    # saveRDS(initial_map, file = 'inputs_outputs/initial_map.rds')
-    # saveRDS(past_spdf[1,], file = 'inputs_outputs/example_past_spdf.rds')
-    
+   
     #### Moving to next page #######
     
     progress$set(message = "Moving to results page", value = .90)

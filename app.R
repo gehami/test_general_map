@@ -51,6 +51,11 @@ server <- function(input, output, session) {
   # build menu; same on all pages
   output$uiStub <- renderUI(tagList(             # a single-output stub ui basically lets you
     tags$link(rel = "stylesheet", type = "text/css", href = "screen_size.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "popup.css"),
+    tags$script('function popupFunction() {
+      var popup = document.getElementById("myInfoPopup");
+                popup.classList.toggle("show");
+      }'),
     fluidPage(                                  #     move the ui into the server function
       # fluidRow(
       #   column(12,
