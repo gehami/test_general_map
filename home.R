@@ -49,6 +49,13 @@ INITIAL_SLIDER_VALUE = 1
 MIN_SLIDER_STEP = 0.5
 
 
+
+INFO_POPUP_TEXT = 'The combined score across all metrics selected (metrics shown below). 
+Ranks each neighborhood from highest scoring in the city (90%ile) to lowest (10%ile). 
+Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics'
+
+
+
 ######## custom JS ######
 # Allows you to move people to a new page via the server
 redirect_jscode <- "Shiny.addCustomMessageHandler('mymessage', function(message) {window.location = '?map';});"
@@ -73,6 +80,7 @@ get_percentile = function(vec, compare_vec = NULL){
 #To have the top observation be marked as the 100%ile, set ret_100_ile == TRUE. 
 #To return a factor variable, ret_factor == TRUE, otherwise it will return a numeric vector. 
 get_quantile = function(vec, quantile_bins, ret_factor = TRUE, ret_100_ile = FALSE, compare_vec = NULL){
+  if(all(is.na(vec))) return(NA)
   
   quantile_bins = round(min(max(quantile_bins, 2), 100)) #ensuring the quantile bins is an integer between 2 and 100
   quant_val = floor(get_percentile(vec, compare_vec)*100 / (100/quantile_bins)) * (100/quantile_bins)
@@ -112,7 +120,7 @@ in_match_order = function(vec_in, vec){
 
 ############# map functions ########
 #Given therisk vars, risk weights, spdf, and codebook, calculates the overall risk factor score
-calculate_score = function(risk_vars, risk_weights, spdf, data_code_book){
+calculate_score = function(risk_vars, risk_weights, spdf, data_code_book, keep_nas = FALSE){
   
   if(length(risk_vars) != length(risk_weights)){
     warning("risk vars and risk weights are not the same length")
@@ -151,9 +159,17 @@ calculate_score = function(risk_vars, risk_weights, spdf, data_code_book){
   }
   
   #Marking any entries with NAs as a large negative number to ensure the resulting value is negative, so we can mark NA scores.
-  for(n in seq_len(ncol(score_vars))){
-    score_vars[is.na(score_vars[,n]),n] = -10000000
+  if(keep_nas){
+    for(n in seq_len(ncol(score_vars))){
+      score_vars[is.na(score_vars[,n]),n] = -10000000
+    }
+  }else{
+    #Alternatively, we can deal with NAs by just taking the average score from the other variables. I like this better for now and will do as such
+    for(n in seq_len(ncol(score_vars))){
+      score_vars[is.na(score_vars[,n]),n] = rowSums(score_vars[is.na(score_vars[,n]),], na.rm = TRUE) / rowSums(!is.na(score_vars[is.na(score_vars[,n]),]))
+    }
   }
+  
   score_mat = data.matrix(score_vars)
   
   #multiplying those scores by the weights and summing them. works
@@ -165,7 +181,7 @@ calculate_score = function(risk_vars, risk_weights, spdf, data_code_book){
   
 }
 #making the label for the map from the risk_vars, spdf, codebook, and quantile bins
-make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins = 10, front_name = FALSE){
+make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins = 10, front_name = FALSE, info_popup_text = ""){
   label_list = NULL
   #cleaning up the risk_var names
   risk_var_cats = unique(gsub('([[:alpha:]]+)(_[[:print:]]*)', '\\1', names(risk_vars)))
@@ -209,7 +225,11 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
 
       }
       full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
-                            "%ile</b>"), label_string)
+                            "%ile</b>",
+                     HTML('<div class = "info-popup" onclick = "popupFunction()">',
+                          '<i class="fa fa-info-circle"></i>',
+                          '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
+                          '</div>')), label_string)
       label_list = c(label_list, paste(full_label, collapse = '<br>')) 
       
       
@@ -252,7 +272,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
                             #'<br class = "no_big_screen">'
                             HTML('<div class = "info-popup" onclick = "popupFunction()">',
                                  '<i class="fa fa-info-circle"></i>',
-                                 '<span class = "info-popuptext" id = "myInfoPopup">Testing</span>',
+                                 '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
                                  '</div>')), label_string)
       label_list = c(label_list, paste(full_label, 
                                        # collapse = '<br class = "no_small_screen">'
@@ -263,7 +283,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
   return(label_list)
 }
 #given an spdf, codebook, risk_vars, risk_weights, and quantiles, returns the updated spdf with the metric score and full label as new vars
-make_full_spdf = function(spdf, data_code_book, risk_vars, risk_weights, quantile_bins){
+make_full_spdf = function(spdf, data_code_book, risk_vars, risk_weights, quantile_bins, info_popup_text = ""){
   #making sure the variables of interest are numeric
   for(n in risk_vars){
     spdf@data[,colnames(spdf@data) == data_code_book$Name[data_code_book$risk_factor_name == n]] = 
@@ -272,7 +292,7 @@ make_full_spdf = function(spdf, data_code_book, risk_vars, risk_weights, quantil
   
   spdf@data = merge(spdf@data, calculate_score(risk_vars, risk_weights, spdf, data_code_book), by = 'GEOID')
   
-  spdf@data$label = make_label_for_score(risk_vars, spdf, data_code_book, quantile_bins)
+  spdf@data$label = make_label_for_score(risk_vars, spdf, data_code_book, quantile_bins, front_name = FALSE, info_popup_text = info_popup_text)
   
   return(spdf)
 }
@@ -375,7 +395,8 @@ get_ind_vars_for_model = function(spdf, risk_vars, data_code_book, MAX_LOC_DIST 
   return(big_ind_dat)
 }
 #given the full spdf hash, inputs list, risk_vars, and codebook, returns the 1) raw predicted scores, 2) pred score quantiles, and 3) labels for the pred map
-get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, quantile_bins = 10, MAX_LOC_DIST = 1){
+get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, quantile_bins = 10, MAX_LOC_DIST = 1,
+                                           info_popup_text = ""){
   
   ind_vars = get_ind_vars_for_model(city_all_spdf_hash[[as.character(inputs$year_range[1])]], risk_vars, data_code_book, MAX_LOC_DIST)
   dep_dat = calculate_score(risk_vars, risk_weights, city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book)
@@ -405,7 +426,14 @@ get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars
   
   pred_score_quantile = suppressWarnings(get_quantile(pred_score_fixed, quantile_bins = quantile_bins))
   
-  pred_score_label = paste0("Predicted overall risk metric 2020: <br/><b>", pred_score_quantile, "%ile</b>")
+  pred_score_label = paste0("Predicted overall risk metric 2020: <br/><b>", pred_score_quantile, "%ile</b>",
+                            HTML('<div class = "info-popup" onclick = "popupFunction()">',
+                                 '<i class="fa fa-info-circle"></i>',
+                                 '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
+                                 '</div>'),'<br/>To avoid inaccurate predictions, we only display the predicted overall score from the metrics you chose.',
+                            '<span class = "no_small_screen"> This does take into account any weights adjustments you made above.', 
+                            'For example, if you adjusted the weights to 0 for all but one metric, then the predicted score will reflect the predicted value for just that one metric.',
+                            '</span>')
   
   #checking the absolute error rate. since the scores are between 0 and 1, this shows the %error of the scores
   print(summary(abs(last_real_score[!is.na(last_real_score)] - predict(score.lm, newdata = ind_vars[!is.na(last_real_score),]))))
@@ -466,6 +494,108 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
     hideGroup(as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))) #hiding the future year layer
   return(map_all)
 }
+
+# ######## Debugging setup ###########
+# #libraries
+# library(shiny)
+# library(shinyWidgets)
+# # library(maps)
+# library(tools)
+# # library(tidyverse)
+# # library(tidycensus)
+# library(hash)
+# library(leaflet)
+# library(magrittr)
+# library(shinyBS)
+# library(sp)
+# library(rgeos)
+# library(shinyjs)
+# 
+# 
+# inputs = readRDS('inputs_outputs/debug_inputs.rds')
+# # inputs$cities = ''
+# 
+# #reading in the cdc data
+# cdc_hash = hash()
+# years = seq(inputs$year_range[1], inputs$year_range[2])
+# for(year in years){
+#   if(!(year %in% keys(cdc_hash))){
+#     cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
+#     colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
+#     cdc_hash[[as.character(year)]] = cdc_data
+#   }
+# }
+# #acs data
+# acs_hash = readRDS('data_tables/acs_dat_hash.rds')
+# trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')
+# tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')
+# 
+# #get just the tracts from the cities that we care about
+# city_tracts = tract_city_dictionary[inputs$cities] %>% values() %>% unlist() %>% as.character()
+# 
+# #identifying which tracts to use
+# tracts_map = trimmed_tracts[trimmed_tracts$GEOID %in% city_tracts,]
+# 
+# 
+# city_all_dat_hash = hash::hash() 
+# for(year in inputs$year_range[1]:inputs$year_range[2]){
+#   acs_year = acs_hash[[as.character(year)]]
+#   acs_year = acs_year[acs_year$GEOID %in% city_tracts,]
+#   cdc_year = cdc_hash[[as.character(year)]]
+#   cdc_year = cdc_year[cdc_year$GEOID %in% city_tracts,]
+#   city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
+# }
+# 
+# city_all_spdf_hash = hash::hash()
+# for(year in inputs$year_range[1]:inputs$year_range[2]){
+#   city_data = merge(tracts_map@data, city_all_dat_hash[[as.character(year)]], by = 'GEOID')
+#   city_spdf = tracts_map[tracts_map$GEOID %in% city_data$GEOID,]
+#   city_spdf = city_spdf[order(city_spdf$GEOID),]
+#   city_data = city_data[order(city_data$GEOID),]
+#   city_spdf@data = city_data
+#   city_all_spdf_hash[[as.character(year)]] = city_spdf
+# }
+# 
+# #setting constants
+# param_hash = hash::copy(inputs)
+# hash::delete(c('cities', 'year_range'), param_hash)
+# data_factors = param_hash %>% values() %>% unlist()
+# if(length(dim(data_factors)) > 0){
+#   data_factors = as.character(data_factors)
+#   names(data_factors) = rep(keys(param_hash), length(data_factors))
+# }
+# 
+# 
+# 
+# #creating the scores
+# risk_vars = data_factors[!duplicated(as.character(data_factors))]
+# risk_weights = rep(INITIAL_WEIGHTS, length(risk_vars))
+# spdf = city_all_spdf_hash[['2018']]
+# quantile_bins = QUANTILE_BINS
+# 
+# #additional constants I need to set up
+# info_popup_text = INFO_POPUP_TEXT
+# front_name = FALSE
+# quantile_bins = QUANTILE_BINS
+# 
+# 
+# past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+# 
+# present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+# 
+# pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
+# present_spdf@data$pred_score = pred_list$raw_score
+# present_spdf@data$pred_quantile = pred_list$score_quantile
+# present_spdf@data$pred_label = pred_list$label
+# 
+# initial_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
 ###### Pass-through parameters #########
 
 #these need to be converted into a list and saved as an rds file to be maintained throughout the journey
@@ -839,8 +969,10 @@ observeEvent(input$map_it,{
     inputs[['economics_factors']] <- input$economic_factors
     inputs[['at-risk_factors']] <- input$violence_factors
     inputs[['qol_factors']] <- input$qol_factors
-    print(inputs)
-
+    # print(inputs)
+    
+    #saving inputs for debugging
+    # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
     
     ###### opening files and doing the things ######
     ####### Reading in data ########
@@ -892,19 +1024,6 @@ observeEvent(input$map_it,{
 
     ####### Contstants #########
     
-    INITIAL_WEIGHTS = 1
-    #percent of a variable that is allowed to be NA for me to keep it in the predictors dataset
-    NA_TOL = .1
-    QUANTILE_BINS = 10
-    # 1/x_ij where x is number of blocks between block i and j (starting at 1), 0 if more than MAX_BLOCK_DIST away
-    MAX_LOC_DIST = 1 #looking at neighbords directly next to tract
-    
-    TRACT_PAL = TRACT_PAL
-    TRACT_OPACITY = TRACT_OPACITY
-    SLIDER_MIN = SLIDER_MIN
-    SLIDER_MAX = SLIDER_MAX
-    INITIAL_SLIDER_VALUE = INITIAL_SLIDER_VALUE
-    MIN_SLIDER_STEP = MIN_SLIDER_STEP
     param_hash = hash::copy(inputs)
     hash::delete(c('cities', 'year_range'), param_hash)
     data_factors = param_hash %>% values() %>% unlist()
@@ -950,13 +1069,13 @@ observeEvent(input$map_it,{
     quantile_bins = QUANTILE_BINS
     
     progress$set(message = paste0("Designing map of ", inputs$year_range[1]), value = .40)
-    past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS)
+    past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
     
     progress$set(message = paste0("Designing map of ", inputs$year_range[2]), value = .50)
-    present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS)
+    present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
     
     progress$set(message = paste0("Predicting map of ", inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), value = .60)
-    pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST)
+    pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
     present_spdf@data$pred_score = pred_list$raw_score
     present_spdf@data$pred_quantile = pred_list$score_quantile
     present_spdf@data$pred_label = pred_list$label
@@ -1320,15 +1439,15 @@ observeEvent(input$recalculate_weights,{
   
   progress$set(message = "Redefining 2016 metrics", value = .10)
   
-  past_spdf = make_full_spdf(city_all_spdf_hash_react()[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS)
+  past_spdf = make_full_spdf(city_all_spdf_hash_react()[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
   
   progress$set(message = "Redefining 2018 metrics", value = .20)
   
-  present_spdf = make_full_spdf(city_all_spdf_hash_react()[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS)
+  present_spdf = make_full_spdf(city_all_spdf_hash_react()[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
   
   progress$set(message = "Building predictive model", value = .30)
   
-  pred_list = get_predicted_scores_and_labels(city_all_spdf_hash_react(), inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST)
+  pred_list = get_predicted_scores_and_labels(city_all_spdf_hash_react(), inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
   present_spdf@data$pred_score = pred_list$raw_score
   present_spdf@data$pred_quantile = pred_list$score_quantile
   present_spdf@data$pred_label = pred_list$label
