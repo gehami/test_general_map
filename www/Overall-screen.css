@@ -1,0 +1,24 @@
+#current_page{
+  text-align: left;
+}
+
+/*Will need to instead focus on the div class = "center_wrapper"
+and class = "splash_text"
+
+
+
+
+*/
+
+
+
+.center_wrapper{
+  text-align: left;
+}
+
+.splash_text{
+  text-align: left;
+  font-family: 'Montserrat', sans-serif;
+  
+}
+

@@ -52,6 +52,8 @@ server <- function(input, output, session) {
   output$uiStub <- renderUI(tagList(             # a single-output stub ui basically lets you
     tags$link(rel = "stylesheet", type = "text/css", href = "screen_size.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "popup.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "Overall-screen.css"),
+    
     tags$script('function popupFunction() {
       var popup = document.getElementById("myInfoPopup");
                 popup.classList.toggle("show");
