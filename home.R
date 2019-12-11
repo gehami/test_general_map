@@ -224,13 +224,19 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         
 
       }
-      full_label = c(paste0("<b>Overall ", risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
+      full_label = paste0('<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>",
-                     HTML('<div class = "info-popup" onclick = "popupFunction()">',
-                          '<i class="fa fa-info-circle"></i>',
-                          '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
-                          '</div>')), label_string)
-      label_list = c(label_list, paste(full_label, collapse = '<br>')) 
+                            HTML('<div class = "info-popup">',
+                                 '<i class="fa fa-info-circle"></i>',
+                                 '</div>'), '</div>',
+                            '<div class = "info-popuptext" id = "myInfoPopup" onclick = "popupFunction()">', info_popup_text, '</div>', paste(label_string, collapse = '<br>'))
+                     label_list = c(label_list, full_label)
+                     
+      #                HTML('<div class = "info-popup" onclick = "popupFunction()">',
+      #                     '<i class="fa fa-info-circle"></i>',
+      #                     '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
+      #                     '</div>')), label_string)
+      # label_list = c(label_list, paste(full_label, collapse = '<br>')) 
       
       
     }else{
@@ -267,17 +273,14 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
           }
         }
       }
-      full_label = c(paste0("<b>Overall risk metric: ", 
+      full_label = paste0('<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
                             suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
-                            HTML('<div class = "info-popup" onclick = "popupFunction()">',
+                            HTML('<div class = "info-popup">',
                                  '<i class="fa fa-info-circle"></i>',
-                                 '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
-                                 '</div>')), label_string)
-      label_list = c(label_list, paste(full_label, 
-                                       # collapse = '<br class = "no_small_screen">'
-                                       collapse = '<br>'
-                                       ))
+                                 '</div>'), '</div>',
+                            '<div class = "info-popuptext" id = "myInfoPopup" onclick = "popupFunction()">', info_popup_text, '</div>', paste(label_string, collapse = '<br>'))
+      label_list = c(label_list, full_label)
     }
   }
   return(label_list)
@@ -971,7 +974,7 @@ observeEvent(input$map_it,{
     inputs[['cities']] <- input$city
     # inputs[['year_range']] <- input$year_range
     inputs[['year_range']] <- YEAR_RANGE
-    inputs[['health_factors']] <- input$health_factors
+    inputs[['medical_factors']] <- input$health_factors
     inputs[['economics_factors']] <- input$economic_factors
     inputs[['at-risk_factors']] <- input$violence_factors
     inputs[['qol_factors']] <- input$qol_factors

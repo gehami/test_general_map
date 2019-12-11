@@ -14,9 +14,10 @@
 }
 
 /* The actual popup */
-.info-popup .info-popuptext {
-  visibility: hidden;
-  width: 200px;
+.info-popuptext {
+/*  visibility: hidden;*/
+  display:none;
+  width: 90%;
   background-color: #555;
   color: #fff;
   text-align: center;
@@ -25,8 +26,7 @@
   position: absolute;
   z-index: 1;
   bottom: auto;
-  left: 50%;
-  margin-left: -130px;
+  left: 5%;
 }
 
 /* Popup arrow 
@@ -42,8 +42,9 @@
 }*/
 
 /* Toggle this class - hide and show the popup */
-.info-popup .show {
-  visibility: visible;
+.show {
+/*  visibility: visible!important;
+  display: block!important;*/
   -webkit-animation: fadeIn 1s;
   animation: fadeIn 1s;
 }
