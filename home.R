@@ -670,8 +670,12 @@ output$current_page <- renderUI({
                                   options = list(
                                     onInitialize = I(paste0('function() { this.setValue(""); }'))
                                   )),
+                   #added as a workaround to prevent the chrome autofill
+                   HTML('<input style="display:none" type="text" name="address"/>'),
                    uiOutput('select_city')
                )
+               #put code for video tutorial here
+               # actionButton()
       ),
       fluidRow(column(12,
                       h3('Select a preset group of metrics'),
@@ -746,10 +750,10 @@ output$current_page <- renderUI({
 
 output$select_city <- renderUI({
   selectizeInput(
-    'city', HTML('Search for your city </br><small>(Largest 500 US cities only)</small>'), choices = 
+    'city', HTML('Search for your city</br><small>(Largest 500 US cities only)</small>'), choices = 
       c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)])[order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))], multiple = FALSE,
     options = list(
-      placeholder = 'Enter City name',
+#      placeholder = 'Enter City name',
       onInitialize = I(paste0('function() { this.setValue("',paste(location, collapse = ','),'"); }')),
       maxOptions = 1000
     )

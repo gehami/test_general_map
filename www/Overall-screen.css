@@ -20,16 +20,31 @@ and class = "splash_text"
 
 .splash_text{
   text-align: left;
-  font-family: 'Montserrat', sans-serif;
-  
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
 }
 
+
+
+.control-label{
+  font-weight: 400;
+  font-size: 1.2em;
+}
+
+.shiny-input-container:not(.shiny-input-container-inline){
+  width: auto;
+}
+
+
 .splash_front{
-  margin-bottom: 5vh;
+  margin-bottom: 2vh;
   text-align: left;
 /*  max-width: 800px;*/
   display: inline-block;
   margin-left: 0;
   margin-right: 0;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+
 }
 

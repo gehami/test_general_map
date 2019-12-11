@@ -42,9 +42,15 @@ small.phone_popup{
 }
 
 
-#factor_selector{
+#factor_selectors{
   vertical-align: middle;
 }
+
+#factor_selectors .dropdown-menu{
+  min-width: 240px;
+  overflow-x: auto;
+}
+
 
 
 
