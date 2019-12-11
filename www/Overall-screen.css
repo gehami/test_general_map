@@ -1,5 +1,7 @@
 #current_page{
   text-align: left;
+  padding-left: 5vw;
+  padding-right: 5vw;
 }
 
 /*Will need to instead focus on the div class = "center_wrapper"
@@ -20,5 +22,14 @@ and class = "splash_text"
   text-align: left;
   font-family: 'Montserrat', sans-serif;
   
+}
+
+.splash_front{
+  margin-bottom: 5vh;
+  text-align: left;
+/*  max-width: 800px;*/
+  display: inline-block;
+  margin-left: 0;
+  margin-right: 0;
 }
 

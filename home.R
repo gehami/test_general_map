@@ -649,9 +649,11 @@ output$current_page <- renderUI({
     div(class = 'center_wrapper',
         div(class = 'splash_front',
             h1('Understand the health of your neighborhood', class = "splash_text"),
-            HTML('<h4 class = "splash_text smaller_header">The needs of a city are different in each neighborhood. Some communities struggle with poverty, others with health problems.',
-                 'Understanding the specific issues in each neighborhood can improve how a city allocates services.',
-                 'Study the numbers that reflect issues in your community'),
+            HTML('<h4 class = "splash_text smaller_header">The health of a city differs by neighborhood. Some face high poverty rates while others struggle with medical issues.',
+                 '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out the health of each neighborhood in your city</strong></h4>',
+                 '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
+                 '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
+                 '<h4 class = splash_text smaller_header>Get to know the numbers behind the health of your neighborhoods</h4>'),
             HTML('<h5 class = "splash_text smaller_header">Data from the CDC and US Census. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
                  '<h5 class = "splash_text smaller_header">For comments, questions, and custom-mapping requests, contact Albert Gehami at 
                  <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a></h5>')
@@ -680,11 +682,11 @@ output$current_page <- renderUI({
                               dropdownButton(
                                 checkboxInput('all_health_factors', "Select all"),
                                 checkboxGroupInput(
-                                  'health_factors', 'Community health factors',
+                                  'health_factors', 'Medical statistics',
                                   choices = HEALTH_CHOICES,
                                   selected = health_risk_factors
                                 ),
-                                label = 'Community health factors',
+                                label = 'Medical statistics',
                                 circle = FALSE
                               )),
                           div(class = "factor_selector",

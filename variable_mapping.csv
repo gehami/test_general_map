@@ -1,4 +1,4 @@
-﻿Variable name,Dataset,var_name,Operation,Name,risk_factor_name,metric_category,front_name,back_name,Preset_1_Economic inequality,Preset_2_Community health,Preset_3_High need populations
+﻿Variable name,Dataset,var_name,Operation,Name,risk_factor_name,metric_category,front_name,back_name,Preset_1_Economic inequality,Preset_2_Medical status,Preset_3_High need populations
 Rate of binge drinking,CDC,binge_crudeprev,,binge_crudeprev,Rate of binge drinking,at-risk,Self-reported binge drinking,of adults self-reported binge drinking,,,1
 Mental health diagnoses,CDC,mhlth_crudeprev,,mhlth_crudeprev,Mental health diagnoses,at-risk,Mental health diagnoses,of adults have been diagnosed with a serious mental health issue,,,1
 Low education (no high school diploma),ACS,DP02_0066P,minus_100_a,low_education,Low education (no high school diploma),at-risk,No HS diploma over 25 years old,of adults 25 and over lack a high school diploma,,,1
@@ -7,8 +7,8 @@ Young single mom above poverty,ACS,B17017_045,over_total_pop_times_100_a,young_s
 Young single dad in poverty,ACS,B17017_011,over_total_pop_times_100_a,young_single_parents,Young single parents (<25),at-risk,Young single parents (<25),of the population are young single parents,,,1
 Young single dad above poverty,ACS,B17017_040,over_total_pop_times_100_a,young_single_parents,Young single parents (<25),at-risk,Young single parents (<25),of the population are young single parents,,,1
 Unemployment rate,ACS,DP03_0009P,,unemployed,Unemployment rate,economic,Unemployment rate,of adults are unemployed,1,,1
-Households under poverty line,ACS,DP03_0119P,,hh_under_poverty,Households under poverty line,economic,Households under poverty line,of households are under the poverty line,1,,
-Lack health insurance (18-64),CDC,access2_crudeprev,,access2_crudeprev,Lack health insurance (18-64),health,Lack health insurance aged 18-64,of adults 18-64 lack health insurance,,1,
+Households under poverty line,ACS,DP03_0119P,,hh_under_poverty,Households under poverty line,economic,Households under poverty line,of households are under the poverty line,1,,1
+Lack health insurance (18-64),CDC,access2_crudeprev,,access2_crudeprev,Lack health insurance (18-64),health,Lack health insurance aged 18-64,of adults 18-64 lack health insurance,,1,1
 Lack dental visits,CDC,dental_crudeprev,minus_1,dental_crudeprev,Lack dental visits,health,No dental care,of adults lack dental care,,1,
 Mental health diagnoses,CDC,mhlth_crudeprev,,mhlth_crudeprev,Mental health diagnoses ,health,Mental health diagnoses,of adults have been diagnosed with a serious mental health issue,,1,
 Regularly sleep <7 hours,CDC,sleep_crudeprev,,sleep_crudeprev,Regularly sleep <7 hours,health,Sleeping <7 hours/night,of adults average <7 hours of sleep a night,,1,
@@ -26,7 +26,7 @@ Children in poverty,ACS,DP03_0129P,,children_in_poverty,Children in poverty,econ
 Renter households,ACS,DP04_0047P,,hh_renters,Renter households,economic,Renter households,of households rent,1,,
 Speak little to no English,ACS,DP02_0113P,,no_english,Speak little to no English,qol,Speak little to no English,of the population speak little to no english,,,1
 Born outside the US,ACS,DP02_0093P,over_total_pop_times_100_b,foreign_born,Born outside the US,qol,Born outside the US,of the population were born outside the US,,,
-Moved to county in past year,ACS,DP02_0082P,,new_to_county,Moved to county in past year,qol,Moved to county in past year,of the population move into county recently,,,1
+Moved to county in past year,ACS,DP02_0082P,,new_to_county,Moved to county in past year,qol,Moved to county in past year,of the population move into county recently,,,
 Public transit to work,ACS,DP03_0021P,minus_100_e,public_transit,Public transit to work,na,Do not use public transit to work,of adults do not use public transit for work commute,,,
 Walk to work,ACS,DP03_0022P,minus_100_f,walk_to_work,Walk to work,na,Do not walk to work,of adults do not walk to work,,,
 Households without a computer,ACS,DP02_0151P,minus_100_c,hh_no_computer,Households without a computer,na,Households without a computer,of households lack a computer,,,
