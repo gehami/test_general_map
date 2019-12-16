@@ -657,7 +657,7 @@ output$current_page <- renderUI({
                  '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
                  '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
                  '<h4 class = splash_text smaller_header>Get to know the numbers behind the health of your neighborhoods</h4>'),
-            HTML('<h5 class = "splash_text smaller_header">Data from the CDC and US Census. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
+            HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://www.census.gov/programs-surveys/acs"> US Census American Community Survey </a> and the <a href = "https://www.cdc.gov/500cities/index.htm">CDC\'s 500 Cities Project</a>. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
                  '<h5 class = "splash_text smaller_header">For comments, questions, and custom-mapping requests, contact Albert Gehami at 
                  <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a></h5>')
             
@@ -731,7 +731,7 @@ output$current_page <- renderUI({
                           # sliderInput('year_range', 'Which years should we look at?',
                           #             YEAR_RANGE[1], YEAR_RANGE[2], value = year_range),
                       ),
-                      actionBttn('map_it', 'Map it'),
+                      actionBttn('map_it', 'Map custom metrics', size = 'sm'),
                       uiOutput('input_warning'),
                       uiOutput('loading_sign')
                       
