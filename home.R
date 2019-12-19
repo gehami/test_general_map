@@ -1180,7 +1180,9 @@ observeEvent(input$walkthrough,{
   shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(class = "popup",
-        HTML('<h5, class = "popup_text">Click-and-drag map to move around (or swipe on mobile).</h5></br>',
+        HTML('<h5, class = "popup_text">Here is the map of your city based on the metrics you chose.</h5></br>',
+             '<h5, class = "popup_text">The map is divided into <a href = "https://simplyanalytics.zendesk.com/hc/en-us/articles/204848916-What-is-a-census-tract-" target="_blank">census tracts</a>, which are similar to neighborhoods</h5></br>',
+             '<h5, class = "popup_text">Click-and-drag map to move around (or swipe on mobile).</h5></br>',
              '<h5, class = "popup_text">Scroll to zoom in and out (or pinch on mobile)</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         actionBttn("walkthrough_map_nav", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
@@ -1357,7 +1359,9 @@ observeEvent(input$no_walkthrough,{
 observeEvent(input$open_help,{
   output$tutorial <- renderUI({
     div(class = "popup",
-        HTML('<h5, class = "popup_text">Click-and-drag map to move around (or swipe on mobile).</h5></br>',
+        HTML('<h5, class = "popup_text">Here is the map of your city based on the metrics you chose.</h5></br>',
+             '<h5, class = "popup_text">The map is divided into <a href = "https://simplyanalytics.zendesk.com/hc/en-us/articles/204848916-What-is-a-census-tract-" target="_blank">census tracts</a>, which are similar to neighborhoods</h5></br>',
+             '<h5, class = "popup_text">Click-and-drag map to move around (or swipe on mobile).</h5></br>',
              '<h5, class = "popup_text">Scroll to zoom in and out (or pinch on mobile)</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         actionBttn("walkthrough_map_nav", HTML("<p>Next</p>"), style = 'unite', size = 'sm')

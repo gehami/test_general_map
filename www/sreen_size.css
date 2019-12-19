@@ -85,16 +85,22 @@ small.phone_popup{
 
 
 .popup {
-  text-align: center;
+  text-align: left;
   left: 30%;
   /*margin-top: 20%;*/
   top: 40%;
   padding: 30px;
   background: #fff;
   border-radius: 5px;
-  width: 40%;
+  max-width: 40%;
   position: absolute;
   z-index: 1000;
+  -webkit-animation: fadeIn 0.5s;
+  animation: fadeIn 0.5s;
+/*  -webkit-animation: fadeOut 0.5s;
+  animation: fadeOut 0.5s;*/
+
+
 }
 
 .popup_text {
