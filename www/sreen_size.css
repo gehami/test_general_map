@@ -42,14 +42,6 @@ small.phone_popup{
 }
 
 
-#factor_selectors{
-  vertical-align: middle;
-}
-
-#factor_selectors .dropdown-menu{
-  min-width: 240px;
-  overflow-x: auto;
-}
 
 
 
@@ -216,6 +208,29 @@ small.phone_popup{
   text-align: center;
   display: inline-block;
 }
+
+#factor_selectors{
+  vertical-align: middle;
+}
+
+#factor_selectors .dropdown-menu{
+  min-width: 240px;
+  overflow-x: auto;
+}
+
+
+.preset-buttons-dropdown{
+  margin-bottom: 2vh;
+  margin-left: 1vw;
+  margin-right: 1vw;
+  text-align: left;
+  display: inline-block;
+}
+.preset-buttons-dropdown .dropdown-menu{
+  min-width: 240px;
+  overflow-x: auto;
+}
+
 
 .warning_text{
   color: red;

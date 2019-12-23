@@ -54,6 +54,12 @@ INFO_POPUP_TEXT = 'The combined score across all metrics selected (metrics shown
 Ranks each neighborhood from highest scoring in the city (90%ile) to lowest (10%ile). 
 Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics'
 
+#economic
+PRESET_1_DESC_TEXT = 'Income, wealth, and poverty'
+#medical
+PRESET_2_DESC_TEXT = 'Medical health stats from the CDC'
+#high needs
+PRESET_3_DESC_TEXT = 'General needs for services across many factors'
 
 
 ######## custom JS ######
@@ -448,7 +454,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   lon_med = mean(present_spdf@bbox[1,])
   lat_med = mean(present_spdf@bbox[2,])
   
-  map <- leaflet(options = leafletOptions(minZoom = 10, zoomControl = FALSE)) %>% 
+  map <- leaflet(options = leafletOptions(minZoom = 8, zoomControl = FALSE)) %>% 
     # add ocean basemap
     # addProviderTiles(providers$Esri.OceanBasemap) %>%
     # add another layer with place names
@@ -540,7 +546,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
 # tracts_map = trimmed_tracts[trimmed_tracts$GEOID %in% city_tracts,]
 # 
 # 
-# city_all_dat_hash = hash::hash() 
+# city_all_dat_hash = hash::hash()
 # for(year in inputs$year_range[1]:inputs$year_range[2]){
 #   acs_year = acs_hash[[as.character(year)]]
 #   acs_year = acs_year[acs_year$GEOID %in% city_tracts,]
@@ -773,9 +779,30 @@ output$select_city <- renderUI({
 preset_options = gsub('\\.', ' ', gsub('^Preset_[0-9]+_', '', 
                                        grep('^Preset', colnames(data_code_book), value = TRUE, ignore.case = TRUE)))
 
-output$preset_buttons <- renderUI(lapply(preset_options, function(i){
-                                       actionBttn(inputId = i, label = i, size = 'sm')
-                                     }))
+metrics_selected_1 = data_code_book$risk_factor_name[data_code_book[,grep('^Preset_1_', colnames(data_code_book), ignore.case = TRUE)] %in% 1]
+metrics_selected_2 = data_code_book$risk_factor_name[data_code_book[,grep('^Preset_2_', colnames(data_code_book), ignore.case = TRUE)] %in% 1]
+metrics_selected_3 = data_code_book$risk_factor_name[data_code_book[,grep('^Preset_3_', colnames(data_code_book), ignore.case = TRUE)] %in% 1]
+
+
+
+
+preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_DESC_TEXT),
+                           list(preset_options[2], metrics_selected_2, PRESET_2_DESC_TEXT),
+                           list(preset_options[3], metrics_selected_3, PRESET_3_DESC_TEXT))
+
+output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
+  div(class = 'preset-buttons-dropdown', dropdownButton(
+    HTML('<h5><i>', i[[3]], '</i></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
+    actionBttn(inputId = i[[1]], label = "Map it", size = 'sm'),
+    label = i[[1]],
+    circle = FALSE
+  ))
+}))
+
+
+# output$preset_buttons <- renderUI(lapply(preset_options, function(i){
+#                                        actionBttn(inputId = i, label = i, size = 'sm')
+#                                      }))
 
 clicked_preset <- reactiveVal(FALSE)
 
@@ -956,6 +983,8 @@ output$loading_sign = NULL
 output$input_warning <- renderUI(HTML("<h5>This process may take up to 60 seconds</h5>"))
 
 observeEvent(input$map_it,{
+  
+
   if(is.null(c(input$violence_factors, input$health_factors, input$economic_factors, input$qol_factors)) & !clicked_preset()){
     print("no factors present")
     output$input_warning <- renderUI(h4("Please select at least 1 risk factor from the 4 drop-down menus above", class = "warning_text"))
@@ -963,6 +992,8 @@ observeEvent(input$map_it,{
     output$input_warning <- renderUI(h4("Please select a city", class = "warning_text"))
   }else{
     shinyjs::disable('map_it')
+    
+    ###### Initial set-up #######
     
     progress <- shiny::Progress$new()
     on.exit(progress$close())
