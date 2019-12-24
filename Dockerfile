@@ -4,7 +4,7 @@ LABEL maintainer "Albert Gehami <gehami@alumni.stanford.edu>"
 
 # system library dependency for the govGeneralMap app
 RUN apt-get update && apt-get install -y \
-    geos  
+    libgeos/geos  
 
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
