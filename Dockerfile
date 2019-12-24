@@ -2,6 +2,10 @@ FROM openanalytics/r-base
 
 LABEL maintainer "Albert Gehami <gehami@alumni.stanford.edu>"
 
+# system library dependency for the govGeneralMap app
+RUN apt-get update && apt-get install -y \
+    geos  
+
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
     sudo \
@@ -14,9 +18,7 @@ RUN apt-get update && apt-get install -y \
     libssh2-1-dev \
     libssl1.0.0
 
-# system library dependency for the govGeneralMap app
-RUN apt-get update && apt-get install -y \
-    libgeos   
+ 
 # basic shiny functionality
 RUN R -e "install.packages(c('shiny', 'rmarkdown', 'rsconnect'), repos='https://cloud.r-project.org/')"
 
