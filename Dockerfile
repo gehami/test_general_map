@@ -31,7 +31,7 @@ RUN R -e "install.packages(c('shinyWidgets', 'tools', 'hash', 'leaflet', 'magrit
 
 # copy the app to the image
 RUN mkdir /root/govGeneralMap
-COPY govGeneralMap /root/govGeneralMap
+COPY test_general_map /root/govGeneralMap
 
 COPY Rprofile.site /usr/lib/R/etc/
 
