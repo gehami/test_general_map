@@ -30,11 +30,11 @@ RUN R -e "install.packages(c('shinyWidgets', 'tools', 'hash', 'leaflet', 'magrit
 
 
 # copy the app to the image
-RUN mkdir /root
-COPY govGeneralMap /root
+RUN mkdir /root/govGeneralMap
+COPY govGeneralMap /root/govGeneralMap
 
 COPY Rprofile.site /usr/lib/R/etc/
 
 EXPOSE 3838
 
-CMD ["R", "-e", "shiny::runApp()"]
+CMD ["R", "-e", "shiny::runApp('/root/govGeneralMap')"]
