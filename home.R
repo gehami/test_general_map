@@ -1009,7 +1009,7 @@ observeEvent(input$map_it,{
     inputs[['economics_factors']] <- input$economic_factors
     inputs[['at-risk_factors']] <- input$violence_factors
     inputs[['qol_factors']] <- input$qol_factors
-    # print(inputs)
+    print(inputs)
     
     #saving inputs for debugging
     # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
