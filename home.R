@@ -792,7 +792,7 @@ preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_
 
 output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
   div(class = 'preset-buttons-dropdown', dropdownButton(
-    HTML('<h5><i>', i[[3]], '</i></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
+    HTML('<h5><strong><i>', i[[3]], '</i></strong></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
     actionBttn(inputId = i[[1]], label = "Map it", size = 'sm'),
     label = i[[1]],
     circle = FALSE
