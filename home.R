@@ -23,6 +23,12 @@ QOL_CHOICES = data_code_book$risk_factor_name[grep('qol', data_code_book$metric_
 
 
 
+health_risk_factors = ''
+economic_factors = ''
+qol_factors = ''
+violence_risk_factors = ''
+location = ''
+
 #Understanding the year range that should be available in the app
 #since cdc data only goes back to 2016, we are cutting the year range off at 2016 minimum
 YEAR_RANGE = c(2016,2018)
@@ -60,7 +66,6 @@ PRESET_1_DESC_TEXT = 'Income, wealth, and poverty'
 PRESET_2_DESC_TEXT = 'Medical health stats from the CDC'
 #high needs
 PRESET_3_DESC_TEXT = 'General needs for services across many factors'
-
 
 ######## custom JS ######
 # Allows you to move people to a new page via the server
@@ -608,29 +613,18 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
 ###### Pass-through parameters #########
 
 #these need to be converted into a list and saved as an rds file to be maintained throughout the journey
-#check if file exists
-# if(file.exists('inputs_outputs/home_inputs.rds')){
-#   inputs = readRDS('inputs_outputs/home_inputs.rds')
-# }else{
-  inputs = hash()
-  inputs[['cities']] <- ''
-  inputs[['year_range']] <- YEAR_RANGE
-  inputs[['health_factors']] <- ''
-  inputs[['economics_factors']] <- ''
-  inputs[['at-risk_factors']] <- ''
-  inputs[['qol_factors']] <- ''
-# }
+inputs = hash()
+inputs[['cities']] <- NULL
+inputs[['year_range']] <- YEAR_RANGE
+inputs[['medical_factors']] <- NULL
+inputs[['economics_factors']] <- NULL
+inputs[['at-risk_factors']] <- NULL
+inputs[['qol_factors']] <- NULL
 
-  
-location = inputs[['cities']]
-violence_risk_factors = inputs[['at-risk_factors']]
-health_risk_factors = inputs[['health_factors']]
-economic_factors = inputs[['economics_factors']]
-qol_factors = inputs[['qol_factors']]
-year_range = inputs[['year_range']]
-
+print(inputs)
 
 #declaring reactive values
+inputs_react = reactiveVal(inputs)
 city_all_spdf_hash_react <- reactiveVal()
 data_code_book_react <- reactiveVal()
 risk_vars_react <- reactiveVal()
@@ -748,11 +742,15 @@ output$current_page <- renderUI({
 })
 
 
-###### begin server code #########
+###### begin server code - reactive vals #########
 
 # observeEvent(input$year_range,{
 #   print(input$year_range)
 # })
+
+
+
+
 
 
 ######### Allowing to filter by state ###########
@@ -826,7 +824,18 @@ observeEvent(input[[preset_options[1]]], {
   updateCheckboxGroupInput(session, 'economic_factors', selected = economic_selected)
   updateCheckboxGroupInput(session, 'qol_factors', selected = qol_selected)
   
+  inputs_local = inputs_react()
+  inputs_local[['medical_factors']] <- health_selected
+  inputs_local[['economics_factors']] <- economic_selected
+  inputs_local[['at-risk_factors']] <- violence_selected
+  inputs_local[['qol_factors']] <- qol_selected
+  
+  inputs_react(inputs_local)
+  
+  
+  
   shinyjs::click('map_it')
+  
   
   
 })
@@ -851,6 +860,15 @@ observeEvent(input[[preset_options[2]]], {
   updateCheckboxGroupInput(session, 'economic_factors', selected = economic_selected)
   updateCheckboxGroupInput(session, 'qol_factors', selected = qol_selected)
   
+  inputs_local = inputs_react()
+  inputs_local[['medical_factors']] <- health_selected
+  inputs_local[['economics_factors']] <- economic_selected
+  inputs_local[['at-risk_factors']] <- violence_selected
+  inputs_local[['qol_factors']] <- qol_selected
+  
+  inputs_react(inputs_local)
+  
+
   shinyjs::click('map_it')
   
   
@@ -875,9 +893,47 @@ observeEvent(input[[preset_options[3]]], {
   updateCheckboxGroupInput(session, 'economic_factors', selected = economic_selected)
   updateCheckboxGroupInput(session, 'qol_factors', selected = qol_selected)
   
+  inputs_local = inputs_react()
+  inputs_local[['medical_factors']] <- health_selected
+  inputs_local[['economics_factors']] <- economic_selected
+  inputs_local[['at-risk_factors']] <- violence_selected
+  inputs_local[['qol_factors']] <- qol_selected
+  
+  inputs_react(inputs_local)
+  
+
+
   shinyjs::click('map_it')
   
   
+})
+
+
+######### Tracking checkboxgroups to update inputs_react() ############
+
+
+
+observeEvent(input$health_factors, {
+  inputs_local <- inputs_react()
+  inputs_local[['medical_factors']] <- input$health_factors
+  inputs_react(inputs_local)
+})
+
+
+observeEvent(input$economic_factors, {
+  inputs_local <- inputs_react()
+  inputs_local[['economics_factors']] <- input$economic_factors
+  inputs_react(inputs_local)
+})
+observeEvent(input$violence_factors, {
+  inputs_local <- inputs_react()
+  inputs_local[['at-risk_factors']] <- input$violence_factors
+  inputs_react(inputs_local)
+})
+observeEvent(input$qol_factors, {
+  inputs_local <- inputs_react()
+  inputs_local[['qol_factors']] <- input$qol_factors
+  inputs_react(inputs_local)
 })
 
 
@@ -977,6 +1033,8 @@ observeEvent(input$all_qol_factors, {
 
 
 
+
+
 ##### Reaction to save inputs and begin building the map ##########
 
 output$loading_sign = NULL
@@ -1000,17 +1058,17 @@ observeEvent(input$map_it,{
     
     progress$set(message = "Recording inputs", value = 0)
     
-    output$warn = NULL
-    inputs = hash()
+    # output$warn = NULL
+    inputs <- inputs_react()
     inputs[['cities']] <- input$city
     # inputs[['year_range']] <- input$year_range
     inputs[['year_range']] <- YEAR_RANGE
-    inputs[['medical_factors']] <- input$health_factors
-    inputs[['economics_factors']] <- input$economic_factors
-    inputs[['at-risk_factors']] <- input$violence_factors
-    inputs[['qol_factors']] <- input$qol_factors
+    # inputs[['medical_factors']] <- input$health_factors
+    # inputs[['economics_factors']] <- input$economic_factors
+    # inputs[['at-risk_factors']] <- input$violence_factors
+    # inputs[['qol_factors']] <- input$qol_factors
     print(inputs)
-    
+
     #saving inputs for debugging
     # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
     
@@ -1051,8 +1109,7 @@ observeEvent(input$map_it,{
     #   codebook = read.csv('variable_mapping.csv', stringsAsFactors = FALSE)
     # }
     
-    print("codebook")
-    
+
     #get just the tracts from the cities that we care about
     city_tracts = tract_city_dictionary[inputs$cities] %>% values() %>% unlist() %>% as.character()
     
@@ -1078,8 +1135,7 @@ observeEvent(input$map_it,{
     
     progress$set(message = "Cleaning data", value = .30)
     
-    print('cleaning data')
-    
+
     city_all_dat_hash = hash::hash() 
     for(year in inputs$year_range[1]:inputs$year_range[2]){
       acs_year = acs_hash[[as.character(year)]]
