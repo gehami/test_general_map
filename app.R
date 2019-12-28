@@ -53,6 +53,7 @@ server <- function(input, output, session) {
     tags$link(rel = "stylesheet", type = "text/css", href = "screen_size.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "popup.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "Overall-screen.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "tutorial.css"),
     
     tags$script('function popupFunction() {
       var popup = document.getElementById("myInfoPopup");

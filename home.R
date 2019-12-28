@@ -56,9 +56,8 @@ MIN_SLIDER_STEP = 0.5
 
 
 
-INFO_POPUP_TEXT = 'The combined score across all metrics selected (metrics shown below). 
-Ranks each neighborhood from highest scoring in the city (90%ile) to lowest (10%ile). 
-Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics'
+INFO_POPUP_TEXT = 'The overall score combines all of the metrics you chose into one number for each neighborhood. You can calculate it by taking the average score of all the metrics you chose (shown below in small font).
+Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page</a>'
 
 #economic
 PRESET_1_DESC_TEXT = 'Income, wealth, and poverty'
@@ -610,7 +609,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
 # 
 # 
 # 
-###### Pass-through parameters #########
+###### reactive-vals / Pass-through parameters #########
 
 #these need to be converted into a list and saved as an rds file to be maintained throughout the journey
 inputs = hash()
@@ -621,7 +620,6 @@ inputs[['economics_factors']] <- NULL
 inputs[['at-risk_factors']] <- NULL
 inputs[['qol_factors']] <- NULL
 
-print(inputs)
 
 #declaring reactive values
 inputs_react = reactiveVal(inputs)
@@ -647,8 +645,10 @@ output$pageStub <- renderUI(tagList(
 
 ######## home page ui #######
 output$current_page <- renderUI({
-  ########### splash up front ###########
   fluidPage(
+    div(class = 'home-page-div',
+    ########### splash up front ###########
+
     div(class = 'center_wrapper',
         div(class = 'splash_front',
             h1('Understand the health of your neighborhood', class = "splash_text"),
@@ -665,7 +665,7 @@ output$current_page <- renderUI({
     ),
   
   
-  ###### Inputs and descriptions ##########  
+    ###### Inputs and descriptions ##########  
   div(class = 'center_wrapper',
       fluidRow(class = 'splash_front',
                div(class = "on_same_row", 
@@ -737,21 +737,50 @@ output$current_page <- renderUI({
                       
       )
       )
-  ))
+  )
+    ###### end of home-page-div ########
+  ),
+    ###### FAQ ###########
+    div(class = 'splash_text smaller_header', id = 'FAQ',
+        HTML('<h3>Frequently asked questions</h3>',
+             '<h4><strong>Q: </strong>How do I navigate this page?</h4>',
+             '<h5><strong>A: </strong><ol><li>Select your city from the city drop-down. You may type in your city or select the state and then the city. Due to privacy concerns, only the 500 US cities with the largest population are avaialable. Smaller city maps can be made on request.</li>
+             <li>Select the metrics you are interested in studying. These can be economic factors such as unemployment or medical factors such as obesity. For a simple selection of metrics, click on one of the three presets. For a fully-custom map, select your metrics individually below the presets.</li>
+             <li>Click the blue button to map the metrics and wait about 20-30 seconds for delivey. If has finished loading but the screen is blank, wait an additional 20 seconds before refreshing, as the map may take some time to render.</li>
+             </ol></h5>',
+#             '<h4><strong>Q: </strong>Why does it take so long to load / why is my screen blank for so long?</h4>',
+#             '<h5><strong>A: </strong>Running this app on a faster server would be expensive so the mapping process may take 10-20 seconds to show even after loading.</h5>',
+             '<h4><strong>Q: </strong>What does this app help me with?</h4>',
+             '<h5><strong>A: </strong>You\'ve got resources & services to allocate in your city. Where should you put those resources to hit the populations in most need of those services? This map shows where the data would point those resources. <i>The data can\'t capture everything about a neighborhood,</i> but it can help inform decisions on where to put resources.</h5>',
+             '<h4><strong>Q: </strong>What does the map show?</h4>',
+             '<h5><strong>A: </strong>It shows each census tract (loosely each neighborhood in a city) ranked from 0%ile to 90%ile based on the metrics you choose. Metrics include unemployment rates, obesity rates, and low education rates (% of adults with no diploma).</h5>',
+             '<h4><strong>Q: </strong>What does "0%ile" or "90%ile" mean?</h4>',
+             '<h5><strong>A: </strong>"0%ile" means that 90% or more of the other neighborhoods in the city have a higher score. "90%ile" means less than 10% of the other neighborhoods have a higher score.</h5>',
+             '<h4><strong>Q: </strong>What is being scored?</h4>',
+             '<h5><strong>A: </strong>All the metrics you chose. For example, if you looked at the metric "unemployment rate" then the neighborhoods in the 90%ile would have the highest unemployment rates in the city and the neighborhoods in the 0%ile would have the lowest unemployment rates.</h5>',
+             '<h4><strong>Q: </strong>How do I see these "scores"?</h4>',
+             '<h5><strong>A: </strong>Go through the first page to make your map, and then click / tap on any of the neighborhoods (each will be their own color) to see its overall score and the score breakdown for each metric you chose. The colors also display the overall score, with the highest scoring neighborhoods (90%ile) in red and the lowest scoring neighborhoods (0%ile) in green.</h5>',
+             '<h4><strong>Q: </strong>What is the overall score and how is it calculated?</h4>',
+             '<h5><strong>A: </strong>The overall score combines all of the metrics you chose into one number for each neighborhood. You can calculate it by taking the average score for each metric you chose. For example, say you chose three metrics to look at. One neighborhood scores in the 70%ile for unemployment, 80%ile for obesity, and 60%ile in low education, so the neighborhood\'s overall score would be the 70%ile. In general, a higher overall score (90%ile) means the neighborhood has worse conditions (based ont the metrics you chose) than a neighborhood with a lower overall score (0%ile) </h5>',
+             '<h4><strong>Q: </strong>So 90%ile = neighborhood needs help and 0%ile = neighborhood is doing well?</h4>',
+             '<h5><strong>A: </strong><i>Based on the metrics you chose to study and compared to other neighorhoods in the city, yes.</i> Again, this data cannot capture the full circumstances a neighborhood experiences, but it can act as another piece of useful information in guiding where to put resources.</h5>',
+             '<h4><strong>Q: </strong>I don\'t think every metric I choose should be counted equally in the overall score. How can I fix that?</h4>',
+             '<h5><strong>A: </strong>If you are on a computer or a large screen you will be able to adjust the metrics to have some count towards the overall score more than others (i.e., re-weight the metrics). See the tutorial on the next page for where you can do this (computers and other large screens only)</h5>',
+             '<h4><strong>Q: </strong>Where does the data come from?</h4>',
+             '<h5><strong>A: </strong><a href = "https://www.census.gov/programs-surveys/acs">US Census American Community Survey</a> provides information on income, education, and other demographics. <a href = "https://www.cdc.gov/500cities/index.htm">Center for Disease Control</a> provides information on physical and mental health.</h5>',
+             '<h4><strong>Q: </strong>Why should I trust this map? Who are you and why do you have this data?</h4>',
+             '<h5><strong>A: </strong>All of this data is publicly available and you can find it yourself (see the links in the last question). I worked as a data scientist for the City of San Jose to help answer these questions around where to allocate resources. Most of the data I used was publicly available, so I wanted to enable other cities to study these questions through a data lens.</h5>',
+             '<h4><strong>Q: </strong>I like what you\'ve done here. I have some ideas I think you could help with. How do I get in contact?</h4>',
+             '<h5><strong>A: </strong>You can reach me at my email address (<a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>) for any custom mapping requests or for partnership on a city-specific project.</h5>'
+             
+        )
+        )
+  )
   
 })
 
 
-###### begin server code - reactive vals #########
-
-# observeEvent(input$year_range,{
-#   print(input$year_range)
-# })
-
-
-
-
-
+###### begin server code #########
 
 ######### Allowing to filter by state ###########
 
@@ -1045,7 +1074,7 @@ observeEvent(input$map_it,{
 
   if(is.null(c(input$violence_factors, input$health_factors, input$economic_factors, input$qol_factors)) & !clicked_preset()){
     print("no factors present")
-    output$input_warning <- renderUI(h4("Please select at least 1 risk factor from the 4 drop-down menus above", class = "warning_text"))
+    output$input_warning <- renderUI(h4("Please select at least 1 risk factor from the 4 drop-down menus above or select one of the three presets above", class = "warning_text"))
   }else if(is.null(input$city) | input$city == ''){
     output$input_warning <- renderUI(h4("Please select a city", class = "warning_text"))
   }else{
@@ -1283,10 +1312,12 @@ observeEvent(input$walkthrough_map_nav,{
   # shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(id = 'map_tile_popup', class = "popup",
-        HTML('<h5, class = "popup_text">Click on a tile (the colored blocks on the map) to see a breakdown of its metrics</h5></br>',
-             '<h5, class = "popup_text">Each metric is ranked relative to the other neighborhoods from the lowest decile of that metric (0%ile) 
-             to the highest decile (90%ile). The overall metric at the top is a combination score of all the metrics you selected, and 
-             reflects the color of the neighborhood\'s tile</h5></br>'),
+        HTML('<h5, class = "popup_text">Clicking on a neighborhood tile (the colored blocks on the map) will display a pop-up with that neighborhoods its overall score and a breakdown of each metric chosen.</h5></br>',
+             '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
+             Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
+             The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>
+             <i>Additional details for the extra curious: </i>You can calculate the overall score by taking the average score of all the metrics you chose (shown in small font). Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page</a></br>
+             If you selected metrics from multiple categories (e.g., both medical and economic factors), the metrics are segmented by category, and each category has an "overall category score" as well. For example you may see an overall score (all metrics selected), an overall economic score (things such as unemployment or poverty rates), and an overall medical score (things such as obesity and diabetes rates).</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         actionBttn("walkthrough_map_tile", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
         # actionButton("walkthrough_map_tile", HTML("<p>Next</p>"))

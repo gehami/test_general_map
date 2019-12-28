@@ -12,11 +12,21 @@ and class = "splash_text"
 
 */
 
-
+.home-page-div{
+  display: inline-block;
+}
 
 .center_wrapper{
   text-align: left;
 }
+
+.half-page{
+  width: 50%;
+  padding-left: 20px;
+  padding-right: 20px
+}
+
+
 
 .splash_text{
   text-align: left;
@@ -47,4 +57,11 @@ and class = "splash_text"
   font-weight: 400;
 
 }
+
+
+#FAQ h5{
+  font-size: 1.13em;
+  padding-bottom: 15px;
+}
+
 
