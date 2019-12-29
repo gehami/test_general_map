@@ -7,16 +7,31 @@ library(purrr)
 
 ######## Constants #########
 
-START_ACS_YEAR = 2013
-END_ACS_YEAR = 2017
+START_ACS_YEAR = 2014
+END_ACS_YEAR = 2018
 CONTAIN_THRESHOLD = 0.5
+
+
+######## General functions #########
+#like the %in% function, but retains the order of the vector that your checking to see if the other vector is in it.
+#EX: if x <- c(1,4,6) and y <- c(6,1,4), then in_match_order(x, y) = c(3,1,2) since 6 appears at x_ind 3, 1 appears at x_ind 1, and 4 appears at x_ind 2
+in_match_order = function(vec_in, vec){
+  ret_inds = NULL
+  for(n in vec){
+    ret_inds = c(ret_inds,
+                 try(which(n == vec_in)[1])
+    )
+  }
+  return(ret_inds[!is.na(ret_inds)])
+}
+
 
 ###### pulling the vars that are needed ##########
 
 # test_profile = load_variables(ACS_YEAR, 'acs5/profile')
 # test_subject = load_variables(ACS_YEAR, 'acs5/subject')
 # test = load_variables(ACS_YEAR, 'acs5')
-setwd('shiny_web_app/')
+# setwd('shiny_web_app/')
 
 vars_needed = read.csv('variable_mapping.csv', stringsAsFactors = FALSE, header = TRUE)
 acs_vars_needed = vars_needed[vars_needed$Dataset == 'ACS',]
@@ -222,7 +237,7 @@ tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')
 
 for(year in years){
   if(!(year %in% keys(acs_hash))){
-    acs_dat = readRDS(paste0('data_tables/all_acs_dat_', as.character(year-1), '.rds'))
+    acs_dat = readRDS(paste0('data_tables/all_acs_dat_', as.character(year), '.rds'))
     
     total_household = acs_dat[,acs_codebook$var_name[acs_codebook$ï..Variable.name == 'Total households']]
     total_pop = acs_dat[,acs_codebook$var_name[acs_codebook$ï..Variable.name == 'Total pop']]
@@ -274,6 +289,97 @@ for(acs_key in keys(acs_hash)){
 
 saveRDS(acs_hash, file = 'data_tables/acs_dat_hash.rds')
 
+########## Identifying the zipcodes of each tract, adding to acs_hash - acs_hash ###############
+
+tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')
+
+all_tracts = hash::values(tract_city_dictionary) %>% unlist() %>% unique()
+
+tract_zip_mapping = read.csv(url('https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt?#'), stringsAsFactors = FALSE)
+
+
+#converting the zip code into characters and making all zips 5 digits - works.
+tract_zip_mapping$ZCTA5 = as.character(tract_zip_mapping$ZCTA5)
+tract_zip_mapping$ZCTA5[nchar(tract_zip_mapping$ZCTA5) == 3] = paste0('00', tract_zip_mapping$ZCTA5[nchar(tract_zip_mapping$ZCTA5) == 3])
+tract_zip_mapping$ZCTA5[nchar(tract_zip_mapping$ZCTA5) == 4] = paste0('0', tract_zip_mapping$ZCTA5[nchar(tract_zip_mapping$ZCTA5) == 4])
+tract_zip_mapping$GEOID = as.character(tract_zip_mapping$GEOID)
+
+
+#this gets the majority of tracts, but not all of them
+all_tracts_to_zip_mapping = data.frame(GEOID = all_tracts, zipcodes = '', stringsAsFactors = FALSE)
+#checking to make sure every tract is mapped to some zipcode - they are.
+# length(all_tracts %in% tract_zip_mapping$GEOID) == length(all_tracts)
+for(n in seq_along(all_tracts)){
+  zips = tract_zip_mapping[tract_zip_mapping$GEOID %in% all_tracts[n], c('ZCTA5', 'TRPOPPCT')]
+  zips = zips[order(as.numeric(zips$TRPOPPCT), decreasing = TRUE),]
+  # if(nrow(zips) < 1){print(paste0('failure at ', n, ' GEOID ', all_tracts[n]))}
+  if(n %% 1000 == 0){print(n/length(all_tracts))}
+  all_tracts_to_zip_mapping$zipcodes[n] = paste(zips$ZCTA5, collapse = ', ')
+}
+
+
+#To get the rest of the tracts' zip codes we'll need to manually match the spatial files
+
+#opening the zipcode to tract mapping, can be found here: https://www.census.gov/geographies/reference-files/2010/geo/relationship-files.html#par_textimage_674173622
+zip_shape = tigris::zctas()
+
+trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')
+trimmed_tracts_ordered = trimmed_tracts[in_match_order(trimmed_tracts$GEOID, all_tracts),]
+
+# zip_shape@proj4string 
+# trimmed_tracts@proj4string #these are the same
+
+#given the zipcode shapefile and a trimmed tract row, returns all zips that intersect with that tract in order of how much of the tract is in the zip
+zips_of_tract = function(tract_row, zip_shape){
+  selected_zips = zip_shape[which(gIntersects(tract_row, zip_shape, byid = TRUE)),]
+  zips_to_tract = data.frame(zips = selected_zips$ZCTA5CE10, contain_perc = 0, stringsAsFactors = FALSE)
+  if(nrow(zips_to_tract) == 1){return(data.frame(zips = selected_zips$ZCTA5CE10, contain_perc = 1, stringsAsFactors = FALSE))}
+  for(n in 1:nrow(zips_to_tract)){
+    zips_to_tract[n,2] = points_in_shape(selected_zips[n,], tract_row)
+  }
+  return(zips_to_tract[order(zips_to_tract$contain_perc, decreasing = TRUE),])
+}
+#given two shapes (spdf), determines what %age of points one is within the other
+points_in_shape = function(shape, shape_within, ret_perc = TRUE, n = 1){
+  points = SpatialPoints(shape_within[n,]@polygons[[1]]@Polygons[[1]]@coords, proj4string = shape_within@proj4string)
+  if(ret_perc) return(length(which(!is.na(over(points, shape)[,1])))/nrow(points@coords))
+  return(length(which(!is.na(over(points, shape)[,1]))))
+}
+
+
+
+identical(as.character(all_tracts), as.character(trimmed_tracts_ordered@data$GEOID))
+
+#works
+missing_tracts = which(all_tracts_to_zip_mapping$zipcodes == '')
+progress_tracker = 1
+for(n in missing_tracts){
+  all_tracts_to_zip_mapping$zipcodes[n] = paste0(zips_of_tract(trimmed_tracts_ordered[n,], zip_shape)$zips, collapse = ', ')
+  progress_tracker = progress_tracker + 1
+  if(progress_tracker %% 10 == 0) print(progress_tracker/length(missing_tracts))
+}
+
+#testing the above. This works.
+# n = missing_tracts[100]
+# plot(zip_shape[zip_shape$ZCTA5CE10 == zips_of_tract(trimmed_tracts_ordered[n,], zip_shape)$zips[1],])
+# plot(trimmed_tracts_ordered[n,], add = TRUE, col = 'red')
+
+
+# all_tracts_to_zip_mapping[sample(1:nrow(all_tracts_to_zip_mapping), 10),]
+
+acs_hash = readRDS('data_tables/acs_dat_hash.rds')
+
+#checking to make sure the GEOIDs are in each file
+length(which(all_tracts_to_zip_mapping$GEOID %in% acs_hash$`2018`$GEOID)) == length(acs_hash$`2018`$GEOID)
+
+
+for(year in keys(acs_hash)){
+  # acs_hash[[year]]$GEOID = as.character(acs_hash[[year]]$GEOID)
+  acs_hash[[year]]$zipcodes = NULL
+  acs_hash[[year]] = merge(acs_hash[[year]], all_tracts_to_zip_mapping, by = 'GEOID')
+}
+
+saveRDS(acs_hash, file = 'data_tables/acs_dat_hash.rds')
 
 ########## saving all do the cities that I need as their own spatial files of tracts ##########
 

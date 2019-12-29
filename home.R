@@ -48,7 +48,7 @@ QUANTILE_BINS = 10
 MAX_LOC_DIST = 1 #looking at neighbords directly next to tract
 
 TRACT_PAL = 'RdYlBu'
-TRACT_OPACITY = .7
+TRACT_OPACITY = .65
 SLIDER_MIN = 0
 SLIDER_MAX = 10
 INITIAL_SLIDER_VALUE = 1
@@ -234,7 +234,8 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         
 
       }
-      full_label = paste0('<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
+      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>",
                             HTML('<div class = "info-popup">',
                                  '<i class="fa fa-info-circle"></i>',
@@ -283,7 +284,8 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
           }
         }
       }
-      full_label = paste0('<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
+      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
                             suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
                             HTML('<div class = "info-popup">',
@@ -439,11 +441,13 @@ get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars
   
   pred_score_quantile = suppressWarnings(get_quantile(pred_score_fixed, quantile_bins = quantile_bins))
   
-  pred_score_label = paste0("Predicted overall risk metric 2020: <br/><b>", pred_score_quantile, "%ile</b>",
-                            HTML('<div class = "info-popup" onclick = "popupFunction()">',
+  pred_score_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', city_all_spdf_hash[[as.character(inputs$year_range[2])]]$zipcodes), '</b></div>',
+                            '<div class = "top-line-popup" onclick = "popupFunction()">',"<b>Predicted overall risk metric 2020: ", pred_score_quantile, "%ile</b>",
+                            HTML('<div class = "info-popup">',
                                  '<i class="fa fa-info-circle"></i>',
-                                 '<span class = "info-popuptext" id = "myInfoPopup">', info_popup_text, '</span>',
-                                 '</div>'),'<br/>To avoid inaccurate predictions, we only display the predicted overall score from the metrics you chose.',
+                                 '</div>'), '</div>',
+                            '<div class = "info-popuptext" id = "myInfoPopup" onclick = "popupFunction()">', info_popup_text, '</div>',
+  '</div>','<br/>To avoid inaccurate predictions, we only display the predicted overall score from the metrics you chose.',
                             '<span class = "no_small_screen"> This does take into account any weights adjustments you made above.', 
                             'For example, if you adjusted the weights to 0 for all but one metric, then the predicted score will reflect the predicted value for just that one metric.',
                             '</span>')
@@ -466,8 +470,8 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
     # focus map in a certain area / zoom level
     setView(lng = lon_med, lat = lat_med, zoom = 12) 
   
-  TRACT_PAL = 'RdYlGn'
-  TRACT_OPACITY = .7
+  # TRACT_PAL = 'RdYlGn'
+  # TRACT_OPACITY = .7
   tract_color_vals = suppressWarnings(get_quantile(present_spdf@data$score, quantile_bins = quantile_bins))
   past_tract_color_vals = suppressWarnings(get_quantile(past_spdf@data$score, quantile_bins = quantile_bins))
   future_tract_color_vals = suppressWarnings(get_quantile(present_spdf@data$pred_score, quantile_bins = quantile_bins))
@@ -499,7 +503,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
                                                     bringToFront = FALSE, dashArray = FALSE),
                 group = as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), options = pathOptions(pane = "risk_tiles")) %>% 
     addLegend(colors = tract_pal(legend_val[length(legend_val):1]), opacity = 0.7, position = 'bottomright',
-              title = 'Risk factors level', labels = c('High (90%ile)', 'Low (10%ile)')) %>%
+              title = 'Risk factors level', labels = c('High (90%ile)', 'Low (0%ile)')) %>%
     # addLayersControl(baseGroups = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
     #                                 as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])))) %>%
     showGroup(as.character(inputs$year_range[2])) %>% hideGroup('Clear') %>% 
@@ -1009,6 +1013,9 @@ observeEvent(input$all_violence_factors, {
   if(!input$all_violence_factors){
     if(select_all_tracker()){
       updateCheckboxGroupInput(session, 'violence_factors', selected = character(0))
+      inputs_local <- inputs_react()
+      inputs_local[['at-risk_factors']] <- character(0)
+      inputs_react(inputs_local)
     }
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -1022,6 +1029,9 @@ observeEvent(input$all_health_factors, {
   if(!input$all_health_factors){
     if(select_all_tracker()){
       updateCheckboxGroupInput(session, 'health_factors', selected = character(0))
+      inputs_local <- inputs_react()
+      inputs_local[['medical_factors']] <- character(0)
+      inputs_react(inputs_local)
     }
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -1036,6 +1046,9 @@ observeEvent(input$all_economic_factors, {
   if(!input$all_economic_factors){
     if(select_all_tracker()){
       updateCheckboxGroupInput(session, 'economic_factors', selected = character(0))
+      inputs_local <- inputs_react()
+      inputs_local[['economic_factors']] <- character(0)
+      inputs_react(inputs_local)
     }
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -1050,6 +1063,9 @@ observeEvent(input$all_qol_factors, {
   if(!input$all_qol_factors){
     if(select_all_tracker()){
       updateCheckboxGroupInput(session, 'qol_factors', selected = character(0))
+      inputs_local <- inputs_react()
+      inputs_local[['qol_factors']] <- character(0)
+      inputs_react(inputs_local)
     }
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
@@ -1096,7 +1112,7 @@ observeEvent(input$map_it,{
     # inputs[['economics_factors']] <- input$economic_factors
     # inputs[['at-risk_factors']] <- input$violence_factors
     # inputs[['qol_factors']] <- input$qol_factors
-    print(inputs)
+    # print(inputs)
 
     #saving inputs for debugging
     # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
@@ -1312,7 +1328,7 @@ observeEvent(input$walkthrough_map_nav,{
   # shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(id = 'map_tile_popup', class = "popup",
-        HTML('<h5, class = "popup_text">Clicking on a neighborhood tile (the colored blocks on the map) will display a pop-up with that neighborhoods its overall score and a breakdown of each metric chosen.</h5></br>',
+        HTML('<h5, class = "popup_text">Clicking on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall score and a breakdown for each metric chosen.</h5></br></br>',
              '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
              Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
              The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>

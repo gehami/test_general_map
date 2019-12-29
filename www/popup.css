@@ -29,6 +29,11 @@
   left: 5%;
 }
 
+.info-popuptext a{
+  color: white
+  
+}
+
 /* Popup arrow 
 .popup .popuptext::after {
   content: "";
