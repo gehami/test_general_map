@@ -234,7 +234,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         
 
       }
-      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
                           '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>",
                             HTML('<div class = "info-popup">',
@@ -284,7 +284,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
           }
         }
       }
-      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
                           '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
                             suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
