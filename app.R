@@ -29,6 +29,7 @@ library(shiny)
 library(shinyWidgets)
 # library(maps)
 library(tools)
+# library(htmltools)
 # library(tidyverse)
 # library(tidycensus)
 library(hash)
@@ -54,11 +55,14 @@ server <- function(input, output, session) {
     tags$link(rel = "stylesheet", type = "text/css", href = "popup.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "Overall-screen.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "tutorial.css"),
-    
+    # htmltools::htmlDependency("jquery", "3.4.1",
+    #                           src = "www",
+    #                           script = "jquery-3.4.1.min.js"),
     tags$script('function popupFunction() {
       var popup = document.getElementById("myInfoPopup");
                 popup.classList.toggle("show");
       }'),
+    
     fluidPage(                                  #     move the ui into the server function
       # fluidRow(
       #   column(12,

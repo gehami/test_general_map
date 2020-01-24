@@ -1,27 +1,27 @@
-#map_tile_popup{
-  top: 60%;
-}
 
 
 @media screen and (max-width: 700px){
   .popup{
     width: 70%;
-    left: 0;
+    left: 15%;
+    top: 15%;
+    max-height: 65vh;
+    overflow-y: auto;
   }
  #legend_popup{
-    left: 30%;
-    top: 40%;
+    left: 15%;
   }
   
   #layer_and_metrics_popup{
-    left: 0;
-    top: 5%;
+    left: 15%;
+    max-height: 70vh;
+    overflow-y: auto;
   }
+
   
   #home_popup{
-    right: 0;
-    left: auto;
-    top: 5%;
+/*    right: 0;
+    left: auto;*/
   }
 }
 
@@ -29,21 +29,21 @@
   
   .popup{
     max-width: 40%;
+    left: 30%;
+    top: 30%;
   }
   
   #legend_popup{
-    left: 60%;
-    top: 40%;
+/*    left: 60%;*/
   }
   
   #layer_and_metrics_popup{
-    left: 30%;
-    top: 5%;
+ /*   left: 30%;*/
+/*    top: 5%;*/
   }
   
   #home_popup{
-    left: 30%;
-    top: 5%;
+ /*   left: 30%;*/
   }
   
   
@@ -55,9 +55,7 @@
 
 .popup {
   text-align: left;
-  left: 30%;
   /*margin-top: 20%;*/
-  top: 40%;
   padding: 30px;
   background: #fff;
   border-radius: 5px;

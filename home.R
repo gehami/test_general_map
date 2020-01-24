@@ -57,7 +57,7 @@ MIN_SLIDER_STEP = 0.5
 
 
 INFO_POPUP_TEXT = 'The overall score combines all of the metrics you chose into one number for each neighborhood. You can calculate it by taking the average score of all the metrics you chose (shown below in small font).
-Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page</a>'
+Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page.</a>'
 
 #economic
 PRESET_1_DESC_TEXT = 'Income, wealth, and poverty'
@@ -234,8 +234,8 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
         
 
       }
-      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
-                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', risk_var_cats_name_conversion$display_names[1], " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
+      full_label = paste0('<div class = "top-line-popup"><b>Neighborhood zipcodes: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall ', tolower(risk_var_cats_name_conversion$display_names[1]), " metric: ", suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)),
                             "%ile</b>",
                             HTML('<div class = "info-popup">',
                                  '<i class="fa fa-info-circle"></i>',
@@ -284,7 +284,8 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
           }
         }
       }
-      full_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
+      #this should work now
+      full_label = paste0('<div class = "top-line-popup"><b>Neighborhood zipcodes: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
                           '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
                             suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
@@ -441,7 +442,7 @@ get_predicted_scores_and_labels = function(city_all_spdf_hash, inputs, risk_vars
   
   pred_score_quantile = suppressWarnings(get_quantile(pred_score_fixed, quantile_bins = quantile_bins))
   
-  pred_score_label = paste0('<div class = "top-line-popup"><b>Zipcodes of neighborhood: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', city_all_spdf_hash[[as.character(inputs$year_range[2])]]$zipcodes), '</b></div>',
+  pred_score_label = paste0('<div class = "top-line-popup"><b>Neighborhood zipcodes: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)([[:print:]]+)', '\\1', city_all_spdf_hash[[as.character(inputs$year_range[2])]]$zipcodes), '</b></div>',
                             '<div class = "top-line-popup" onclick = "popupFunction()">',"<b>Predicted overall risk metric 2020: ", pred_score_quantile, "%ile</b>",
                             HTML('<div class = "info-popup">',
                                  '<i class="fa fa-info-circle"></i>',
@@ -660,10 +661,7 @@ output$current_page <- renderUI({
                  '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out the health of each neighborhood in your city</strong></h4>',
                  '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
                  '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
-                 '<h4 class = splash_text smaller_header>Get to know the numbers behind the health of your neighborhoods</h4>'),
-            HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://www.census.gov/programs-surveys/acs"> US Census American Community Survey </a> and the <a href = "https://www.cdc.gov/500cities/index.htm">CDC\'s 500 Cities Project</a>. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
-                 '<h5 class = "splash_text smaller_header">For comments, questions, and custom-mapping requests, contact Albert Gehami at 
-                 <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a></h5>')
+                 '<h4 class = splash_text smaller_header>Get to know the numbers behind the health of your neighborhoods</h4>')
             
             )
     ),
@@ -777,7 +775,11 @@ output$current_page <- renderUI({
              '<h4><strong>Q: </strong>I like what you\'ve done here. I have some ideas I think you could help with. How do I get in contact?</h4>',
              '<h5><strong>A: </strong>You can reach me at my email address (<a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>) for any custom mapping requests or for partnership on a city-specific project.</h5>'
              
-        )
+        ),
+HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://www.census.gov/programs-surveys/acs"> US Census American Community Survey </a> and the <a href = "https://www.cdc.gov/500cities/index.htm">CDC\'s 500 Cities Project</a>. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
+     '<h5 class = "splash_text smaller_header">For comments, questions, and custom-mapping requests, contact Albert Gehami at 
+     <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a></h5>')
+
         )
   )
   
@@ -817,18 +819,34 @@ metrics_selected_3 = data_code_book$risk_factor_name[data_code_book[,grep('^Pres
 
 
 
-preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_DESC_TEXT),
-                           list(preset_options[2], metrics_selected_2, PRESET_2_DESC_TEXT),
-                           list(preset_options[3], metrics_selected_3, PRESET_3_DESC_TEXT))
+preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_DESC_TEXT, 1),
+                           list(preset_options[2], metrics_selected_2, PRESET_2_DESC_TEXT, 2),
+                           list(preset_options[3], metrics_selected_3, PRESET_3_DESC_TEXT, 3))
+
+#shout out to the real ones at w3schools for this popup function: https://www.w3schools.com/howto/howto_js_popup.asp
 
 output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
-  div(class = 'preset-buttons-dropdown', dropdownButton(
-    HTML('<h5><strong><i>', i[[3]], '</i></strong></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
-    actionBttn(inputId = i[[1]], label = "Map it", size = 'sm'),
-    label = i[[1]],
-    circle = FALSE
-  ))
+  # div(class = 'preset-buttons-dropdown', dropdownButton(
+  #   HTML('<h5><strong><i>', i[[3]], '</i></strong></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
+  #   actionBttn(inputId = i[[1]], label = "Map it", size = 'sm'),
+  #   label = i[[1]],
+  #   circle = FALSE
+  # ))
+  div(class = 'preset-buttons-dropdown', 
+      actionBttn(inputId = i[[1]], label = i[[1]], size = 'sm'),
+      # HTML(paste0('<div class="info-popup" onclick = "popupFunction', i[[4]],'()"><p class = "preset-button-desc"><i>'),
+      #      i[[3]],paste0('<div class="info-popuptext" id="myInfoPopup',i[[4]],'">Metrics included'),
+      #   paste(c(1:length(i[[2]])), ') ', i[[2]], collapse = "<br>", sep = ''),'</div>
+      #    </div>', sep = '')
+      HTML('<p class = "preset-button-desc"><i>', i[[3]], '</i></p>')
+      )
+  
 }))
+
+# HTML('<div class = "info-popup">',
+#      '<i class="fa fa-info-circle"></i>',
+#      '</div>'), '</div>',
+# '<div class = "info-popuptext" id = "myInfoPopup" onclick = "popupFunction()">', info_popup_text, '</div>', paste(label_string, collapse = '<br>'))
 
 
 # output$preset_buttons <- renderUI(lapply(preset_options, function(i){
@@ -1328,20 +1346,20 @@ observeEvent(input$walkthrough_map_nav,{
   # shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(id = 'map_tile_popup', class = "popup",
-        HTML('<h5, class = "popup_text">Clicking on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall score and a breakdown for each metric chosen.</h5></br></br>',
-             '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
-             Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
-             The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>
-             <i>Additional details for the extra curious: </i>You can calculate the overall score by taking the average score of all the metrics you chose (shown in small font). Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page</a></br>
-             If you selected metrics from multiple categories (e.g., both medical and economic factors), the metrics are segmented by category, and each category has an "overall category score" as well. For example you may see an overall score (all metrics selected), an overall economic score (things such as unemployment or poverty rates), and an overall medical score (things such as obesity and diabetes rates).</h5></br>'),
+        HTML('<h5, class = "popup_text">Clicking or tapping on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall "risk factor level" score and a breakdown for each metric chosen. A score below the 50%ile means that the risk factors you chose are less present in this neighborhood than others in the city, while a score above the 50%ile means the risk factors are more present than in the average neighborhood in the city. Learn more about these scores from the <a href = "?home">FAQ on the bottom of the home page</a></h5></br></br>'),
+             # '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
+             # Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
+             # The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>
+             # <i>Additional details for the extra curious: </i>You can calculate the overall score by taking the average score of all the metrics you chose (shown in small font). Typically the highest scoring neighborhoods show the highest needs in the city according to the data and selected metrics. Learn more from the <a href = "?home">FAQ on the bottom of the home page</a></br>
+             # If you selected metrics from multiple categories (e.g., both medical and economic factors), the metrics are segmented by category, and each category has an "overall category score" as well. For example you may see an overall score (all metrics selected), an overall economic score (things such as unemployment or poverty rates), and an overall medical score (things such as obesity and diabetes rates).</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         actionBttn("walkthrough_map_tile", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
         # actionButton("walkthrough_map_tile", HTML("<p>Next</p>"))
         
     )
   })
-  leafletProxy('map') %>% clearPopups() %>% addPopups(lat = as.numeric(example_past_spdf_react()$INTPTLAT), lng = as.numeric(example_past_spdf_react()$INTPTLON),
-                                                      popup = HTML(example_past_spdf_react()$label))
+  # leafletProxy('map') %>% clearPopups() %>% addPopups(lat = as.numeric(example_past_spdf_react()$INTPTLAT), lng = as.numeric(example_past_spdf_react()$INTPTLON),
+  #                                                     popup = HTML(example_past_spdf_react()$label))
   
   # shinyjs::addCssClass(class = 'highlight-border', selector = '.leaflet-popup-content')
   

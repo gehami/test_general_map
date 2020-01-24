@@ -56,6 +56,10 @@ small.phone_popup{
   #results_page{
     padding:0;
   }
+  #select_year_div {
+    right: 4vw;
+  }
+
   
 }
 @media only screen and (min-width: 770px){
@@ -64,6 +68,9 @@ small.phone_popup{
   }
   #map_container {
     height: 85vh;
+  }
+  #select_year_div {
+    right: 1vw;
   }
 }
 
@@ -75,13 +82,16 @@ small.phone_popup{
   display: flex;
 }
 
-
 #select_year_div {
   position: absolute;
-  right: 1vw;
-  max-width: 17vw;
+  max-width: 80px;
   top: 1vh;
 }
+#select_year_div .form-group {
+    margin-bottom: 0;
+}
+
+
 
 .factor_selector{
   margin-bottom: 2vh;
@@ -102,12 +112,18 @@ small.phone_popup{
 
 
 .preset-buttons-dropdown{
-  margin-bottom: 2vh;
+  margin-bottom: 0;
   margin-left: 1vw;
   margin-right: 1vw;
   text-align: left;
   display: inline-block;
+  max-width: 202px;
+  vertical-align: text-top;
 }
+.preset-buttons-dropdown .bttn-unite{
+  margin: 0 10px 0 0;
+}
+
 .preset-buttons-dropdown .dropdown-menu{
   min-width: 240px;
   overflow-x: auto;
