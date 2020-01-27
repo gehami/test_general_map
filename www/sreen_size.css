@@ -15,10 +15,25 @@
   border-radius: 5px;
   position: absolute;
   z-index: 900;
-  margin-top: 1vh;
-  margin-left: 1vh;
+  margin-top: 3%;
+  margin-left: 3%;
 }
 
+#map_container{
+  width: 100%;
+  position: relative;
+  display: flex;
+}
+
+#select_year_div {
+  position: absolute;
+  max-width: 80px;
+  top: 5%;
+  right: 5%;
+}
+#select_year_div .form-group {
+    margin-bottom: 0;
+}
 
 .leaflet-popup-content{
   max-height: 70vh;
@@ -57,7 +72,7 @@ small.phone_popup{
     padding:0;
   }
   #select_year_div {
-    right: 4vw;
+/*    right: 4vw;*/
   }
 
   
@@ -76,20 +91,7 @@ small.phone_popup{
 
 
 
-#map_container{
-  width: 100%;
-  position: relative;
-  display: flex;
-}
 
-#select_year_div {
-  position: absolute;
-  max-width: 80px;
-  top: 1vh;
-}
-#select_year_div .form-group {
-    margin-bottom: 0;
-}
 
 
 

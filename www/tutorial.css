@@ -56,7 +56,7 @@
 .popup {
   text-align: left;
   /*margin-top: 20%;*/
-  padding: 30px;
+  padding: 35px 7px 10px 7px;  
   background: #fff;
   border-radius: 5px;
   position: absolute;
