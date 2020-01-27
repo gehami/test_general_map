@@ -11,12 +11,12 @@
 }
 
 #home_button {
-  background: #fff;
+  background: #ffffff37;
   border-radius: 5px;
   position: absolute;
   z-index: 900;
-  margin-top: 3%;
-  margin-left: 3%;
+  margin-top: 11px;
+  margin-left: 3px;
 }
 
 #map_container{
@@ -26,10 +26,10 @@
 }
 
 #select_year_div {
-  position: absolute;
-  max-width: 80px;
-  top: 5%;
-  right: 5%;
+    position: absolute;
+    max-width: 80px;
+    top: 15px;
+    right: 10px;
 }
 #select_year_div .form-group {
     margin-bottom: 0;
@@ -39,7 +39,20 @@
   max-height: 70vh;
   overflow-y: auto;
   max-width: 90vw;
+  margin: 13px 2px 10px 2px;
+  
 }
+.leaflet-bottom .leaflet-control {
+    margin-bottom: 10px;
+}
+.leaflet-right .leaflet-control {
+    margin-right: 15px;
+}
+.leaflet-container .leaflet-control-attribution, .leaflet-container .leaflet-control-scale {
+    font-size: 4px;
+}
+
+
 
 small.phone_popup{
   font-size: 93%;
