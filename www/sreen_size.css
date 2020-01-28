@@ -13,10 +13,10 @@
 #home_button {
   background: #ffffff37;
   border-radius: 5px;
-  position: absolute;
   z-index: 900;
-  margin-top: 11px;
-  margin-left: 3px;
+}
+#select_year_div {
+    max-width: 80px;
 }
 
 #map_container{
@@ -25,12 +25,7 @@
   display: flex;
 }
 
-#select_year_div {
-    position: absolute;
-    max-width: 80px;
-    top: 15px;
-    right: 10px;
-}
+
 #select_year_div .form-group {
     margin-bottom: 0;
 }
@@ -85,7 +80,21 @@ small.phone_popup{
     padding:0;
   }
   #select_year_div {
-/*    right: 4vw;*/
+
+  }
+  #home_button {
+    /*top: 60%;
+    left: 3px;*/
+    width: fit-content;
+  }
+  #select_year_div {
+     /* top: 70%;
+      left: 3px;*/
+  }
+  #home_and_year {
+    top: 60%;
+    left: 3px;
+    position: absolute;
   }
 
   
@@ -100,6 +109,17 @@ small.phone_popup{
   #select_year_div {
     right: 1vw;
   }
+  #home_button {
+    margin-top: 15px;
+    left: 3px;
+    position: absolute;
+  }
+  #select_year_div {
+      top: 15px;
+      right: 5px;
+      position: absolute;
+  }
+
 }
 
 

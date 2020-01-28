@@ -1300,11 +1300,20 @@ observeEvent(input$map_it,{
                   # actionButton("no_walkthrough", HTML("<p>No</p>"))
               ),
               uiOutput('tutorial'),
-              div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x'))),
-              div(id = 'select_year_div', pickerInput('select_year',
+              div(id = 'home_button', class = 'no_small_screen', tags$a(href = '?home', icon('home', class = 'fa-3x'))),
+              div(id = 'select_year_div', class = 'no_small_screen', pickerInput('select_year',
                                                       choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                   as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
-                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'))
+                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
+              div(id = 'home_and_year', class = 'no_big_screen',
+                  div(id = 'select_year_div',  pickerInput('select_year_small',
+                                                           choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
+                                                                                                 as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
+                                                                                     multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
+                  
+                  div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x')))
+                  
+                  )
           )
         ),id = 'results_page'
       )
@@ -1394,7 +1403,7 @@ observeEvent(input$walkthrough_legend,{
   
   output$tutorial <- renderUI({
     div(id = 'layer_and_metrics_popup', class = "popup",
-        HTML('<h5, class = "popup_text"></h5>Change the year by clicking the drop-down to the right. 
+        HTML('<h5, class = "popup_text"></h5>Change the year by clicking the drop-down <span class = "no_small_screen">to the right</span>. 
              You can see the metrics for the past and present, as well as the predict overall metric for the future.</br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
@@ -1405,6 +1414,7 @@ observeEvent(input$walkthrough_legend,{
         )
   })
   shinyjs::addCssClass(id = 'select_year_div', class = 'highlight-border')
+  shinyjs::addCssClass(id = 'home_and_year', class = 'highlight-border')
   
 })
 
@@ -1450,6 +1460,7 @@ observeEvent(input$walkthrough_to_home,{
   })
   
   shinyjs::addCssClass(id = 'home_button', class = 'highlight-border')
+  shinyjs::addCssClass(id = 'home_and_year', class = 'highlight-border')
   
   
 })
@@ -1480,6 +1491,7 @@ observeEvent(input$close_help_popups,{
   shinyjs::removeCssClass(id = 'select_year_div', class = 'highlight-border')
   shinyjs::removeCssClass(class = 'highlight-border', selector = '.legend')
   shinyjs::removeCssClass(id = 'home_button', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'home_and_year', class = 'highlight-border')
   
   
 })
@@ -1488,6 +1500,8 @@ observeEvent(input$close_help_popups,{
 observeEvent(input$end_walkthrough,{
   
   shinyjs::removeCssClass(id = 'home_button', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'home_and_year', class = 'highlight-border')
+  
   
   output$tutorial <- renderUI({
     div(id = 'return_help_popup', class = 'help_popup', 
@@ -1578,6 +1592,11 @@ observeEvent(input$select_year,{
                                       as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])))) %>%
     showGroup(as.character(input$select_year)) 
 })
+observeEvent(input$select_year_small,{
+  leafletProxy('map') %>% hideGroup(c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
+                                      as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])))) %>%
+    showGroup(as.character(input$select_year_small)) 
+})
 
 ############# Updating map with updated metrics and reseting weights ##############
 
@@ -1629,6 +1648,10 @@ observeEvent(input$recalculate_weights,{
               choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                           as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
               selected = as.character(inputs$year_range[2]))
+  updatePickerInput(session, 'select_year_small',
+                    choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
+                                as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
+                    selected = as.character(inputs$year_range[2]))
   
   shinyBS::updateCollapse(session, "sliders", close = 'Click here to edit weight of metrics')
   # progress$close()
