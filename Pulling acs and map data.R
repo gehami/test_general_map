@@ -81,6 +81,127 @@ for(ACS_YEAR in START_ACS_YEAR:END_ACS_YEAR){
 }
 
 
+####### Identifying tracts for each city in the US #########
+
+library(rgeos)
+library(tigris)
+library(sp)
+library(hash)
+library(magrittr)
+
+#given a single row in an spdf, returns spdf row with only the largest polygon (by area)
+get_largest_shape = function(spdf, row_id = 1){
+  require(sp)
+  spolys = spdf@polygons[[1]]@Polygons
+  max_area = 0
+  for(n in seq_along(spolys)){
+    if(spolys[[n]]@area > max_area){
+      max_area = spolys[[n]]@area
+      max_area_n = n
+    }
+  }
+  single_poly = Polygons(list(spolys[[max_area_n]]), row_id)
+  single_spoly = SpatialPolygons(list(single_poly))
+  proj4string(single_spoly) = spdf@proj4string
+  data_for_spdf = data.frame(spdf@data[1,], stringsAsFactors = FALSE, row.names = row_id)
+  ret_spdf = SpatialPolygonsDataFrame(single_spoly, data = data_for_spdf, match.ID = TRUE)
+  return(ret_spdf)
+}
+#given two shapes (spdf), determines what %age of points one is within the other
+points_in_shape = function(shape, shape_within, ret_perc = TRUE, n = 1){
+  points = SpatialPoints(shape_within[n,]@polygons[[1]]@Polygons[[1]]@coords, proj4string = shape_within@proj4string)
+  if(ret_perc) return(length(which(!is.na(over(points, shape)[,1])))/nrow(points@coords))
+  return(length(which(!is.na(over(points, shape)[,1]))))
+}
+#given all of the census tracts, returns the census tracts that are within the city limits and additional tracts 
+tracts_in_shape = function(tracts, shape, contain_threshold = .5){
+  require(rgeos)
+  if(contain_threshold <= 0){
+    return(tracts[which(gIntersects(shape, tracts, byid = TRUE)),])
+  }
+  contain_tracts = tracts[which(gContains(shape, tracts, byid = TRUE)),]
+  if(is.numeric(contain_threshold) & contain_threshold < 1){
+    border_tracts = tracts[which(gOverlaps(shape, tracts, byid = TRUE)),]
+    keep_tracts = NULL
+    for(n in seq_len(nrow(border_tracts))){
+      if(points_in_shape(shape, border_tracts, ret_perc = TRUE, n) > contain_threshold){
+        keep_tracts = c(keep_tracts, n)
+      }
+    }
+    contain_tracts = rbind(contain_tracts, border_tracts[keep_tracts,])
+  }
+  return(contain_tracts)
+}
+#given the city name, the county fips for the city, and the state abbreviation, returns all of the tracts in that city
+get_tracts_in_city = function(city_name, county_fips, state_abb, contain_threshold = 0){
+  require(rgeos)
+  require(tigris)
+  county_tracts = tryCatch(tracts(state_abb, county_fips, cb = TRUE),
+                           error = function(e) tracts(state_abb, county_fips))
+  city_shape = tryCatch({places(state_abb, cb = TRUE)}, 
+                        error = function(e) places(state_abb))
+  
+  city_shape = city_shape[city_shape$NAME == city_name,] %>% get_largest_shape()
+  
+  # shape = city_shape
+  # tracts = county_tracts
+  ret_tracts = tracts_in_shape(county_tracts, city_shape, contain_threshold = contain_threshold)
+  return(ret_tracts$GEOID)
+}
+
+#pulling together mapping of all cities and tracts
+city_to_county_map = read.csv('uscities-counties.csv', stringsAsFactors = FALSE)
+
+
+#creating a hash for each city to have its own list of tracts, and a large list of all the tracts to include
+include_tracts = NULL
+fail_cities = NULL
+#dictionary for city and tracts
+all_tract_city_dictionary = hash::hash()
+
+missing_cities = NULL
+
+for(n in 1:length(state.abb)){
+  state_abb = state.abb[n]
+  
+  
+  state = tigris::places(state = state_abb)
+  
+  state$NAME = gsub(' \\([[:print:]]+\\)$', '',state$NAME) #cleaning state name
+  if(length(which(state$NAME %in% city_to_county_map$city)) != length(state$NAME)) warning(paste0('some cities missing in ', state_abb)) #confirming all cdc cities are in city-to-county-map
+  #tracking missing cities
+  missing_cities = c(missing_cities, state[which(!(state$NAME %in% city_to_county_map$city)),])
+  
+  for(i in which(state$NAME %in% city_to_county_map$city)){
+    city = state[i,]
+    city_state_name = paste0(city$NAME, ' ', state_abb)
+    city_county = city_to_county_map[which(paste0(city_to_county_map$city, city_to_county_map$state_id) %in% paste0(city$NAME, state_abb)),
+                                     which(colnames(city_to_county_map) %in% c("city", "county_name", 'county_fips', 
+                                                                               'state_name', 'state_id'))]
+    
+    city_name = city$NAME
+    county_fips = substr(city_county$county_fips, nchar(city_county$county_fips) - 2, nchar(city_county$county_fips))[1]
+    
+    tryCatch({tracts_in_city = get_tracts_in_city(city_name, county_fips, state_abb, contain_threshold = CONTAIN_THRESHOLD)
+    include_tracts = c(include_tracts, tracts_in_city)
+    tract_city_dictionary[[city_state_name]] = tracts_in_city},
+    error = function(e){
+      fail_cities = c(fail_cities, city_state_name)
+    })
+    #testing to make sure it works. It seems to.
+    # state_tracts = tracts(state_abb, county_fips)
+    # state_tracts_for_city = state_tracts[state_tracts$GEOID %in% tracts_in_city,]
+    # plot(state_tracts_for_city, border = 'red')
+    # plot(city, add = TRUE)
+    
+    
+  }
+  
+}
+
+
+
+
 
 
 
