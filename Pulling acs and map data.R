@@ -81,7 +81,11 @@ for(ACS_YEAR in START_ACS_YEAR:END_ACS_YEAR){
 }
 
 
+<<<<<<< HEAD
 ####### Identifying tracts for each city in the US - all_tract_city_dictionary#########
+=======
+####### Identifying tracts for each city in the US #########
+>>>>>>> 7f5e6f7143b0b88f2fb76b290e8aa69aa547d24e
 
 library(rgeos)
 library(tigris)
@@ -161,10 +165,13 @@ all_tract_city_dictionary = hash::hash()
 
 missing_cities = NULL
 
+<<<<<<< HEAD
 CONTAIN_THRESHOLD = 0
 past_file_name = NULL
 past_past_file_name = NULL
 homewd = getwd()
+=======
+>>>>>>> 7f5e6f7143b0b88f2fb76b290e8aa69aa547d24e
 for(n in 1:length(state.abb)){
   state_abb = state.abb[n]
   
@@ -174,7 +181,11 @@ for(n in 1:length(state.abb)){
   state$NAME = gsub(' \\([[:print:]]+\\)$', '',state$NAME) #cleaning state name
   if(length(which(state$NAME %in% city_to_county_map$city)) != length(state$NAME)) warning(paste0('some cities missing in ', state_abb)) #confirming all cdc cities are in city-to-county-map
   #tracking missing cities
+<<<<<<< HEAD
   missing_cities = c(missing_cities, state[which(!(state$NAME %in% city_to_county_map$city)),]$NAME)
+=======
+  missing_cities = c(missing_cities, state[which(!(state$NAME %in% city_to_county_map$city)),])
+>>>>>>> 7f5e6f7143b0b88f2fb76b290e8aa69aa547d24e
   
   for(i in which(state$NAME %in% city_to_county_map$city)){
     city = state[i,]
@@ -187,8 +198,13 @@ for(n in 1:length(state.abb)){
     county_fips = substr(city_county$county_fips, nchar(city_county$county_fips) - 2, nchar(city_county$county_fips))[1]
     
     tryCatch({tracts_in_city = get_tracts_in_city(city_name, county_fips, state_abb, contain_threshold = CONTAIN_THRESHOLD)
+<<<<<<< HEAD
     # include_tracts = c(include_tracts, tracts_in_city)
     all_tract_city_dictionary[[city_state_name]] = tracts_in_city},
+=======
+    include_tracts = c(include_tracts, tracts_in_city)
+    tract_city_dictionary[[city_state_name]] = tracts_in_city},
+>>>>>>> 7f5e6f7143b0b88f2fb76b290e8aa69aa547d24e
     error = function(e){
       fail_cities = c(fail_cities, city_state_name)
     })
@@ -197,6 +213,7 @@ for(n in 1:length(state.abb)){
     # state_tracts_for_city = state_tracts[state_tracts$GEOID %in% tracts_in_city,]
     # plot(state_tracts_for_city, border = 'red')
     # plot(city, add = TRUE)
+<<<<<<< HEAD
 
     if(i %% 50 == 0){print(paste0(i, ' of ', length(which(state$NAME %in% city_to_county_map$city)), ' in state ', state_abb))}
   }
@@ -215,6 +232,17 @@ for(n in 1:length(state.abb)){
   }
 }
 setwd(homewd)
+=======
+    
+    
+  }
+  
+}
+
+
+
+
+>>>>>>> 7f5e6f7143b0b88f2fb76b290e8aa69aa547d24e
 
 
 
