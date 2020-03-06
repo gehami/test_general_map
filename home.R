@@ -22,6 +22,9 @@ ECONOMIC_CHOICES = data_code_book$risk_factor_name[grep('economic', data_code_bo
 QOL_CHOICES = data_code_book$risk_factor_name[grep('qol', data_code_book$metric_category, ignore.case = TRUE)]
 
 
+city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')
+all_cities = unlist(hash::keys(city_tract_map))
+
 
 health_risk_factors = ''
 economic_factors = ''
@@ -35,9 +38,17 @@ YEAR_RANGE = c(2016,2018)
 
 
 #loading one cdc data to know what cities we have cdc data on
-cdc_2018 = readRDS('data_tables/cdc_2018.rds')
-cities_cdc = paste0(cdc_2018$placename[!duplicated(cdc_2018$placename)], ' ', cdc_2018$stateabbr[!duplicated(cdc_2018$placename)])
-states_cdc = unique(cdc_2018$stateabbr)
+# cdc_2018 = readRDS('data_tables/cdc_2018.rds')
+# cities_cdc = paste0(cdc_2018$placename[!duplicated(cdc_2018$placename)], ' ', cdc_2018$stateabbr[!duplicated(cdc_2018$placename)])
+# states_cdc = unique(cdc_2018$stateabbr)
+cities_cdc = all_cities
+states_cdc = unique(substr(all_cities, nchar(all_cities)-1, nchar(all_cities)))[order(unique(substr(all_cities, nchar(all_cities)-1, nchar(all_cities))))]
+
+
+
+##checking to make sure every city_state in cdc is also in county_tract_map... it does
+# length(cities_cdc %in% all_cities) == length(cities_cdc) #confirmed
+
 
 
 INITIAL_WEIGHTS = 1
@@ -656,12 +667,12 @@ output$current_page <- renderUI({
 
     div(class = 'center_wrapper',
         div(class = 'splash_front',
-            h1('Understand the health of your neighborhood', class = "splash_text"),
-            HTML('<h4 class = "splash_text smaller_header">The health of a city differs by neighborhood. Some face high poverty rates while others struggle with medical issues.',
-                 '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out the health of each neighborhood in your city</strong></h4>',
+            h1('City Equity Map', class = "splash_text"),
+            HTML('<h4 class = "splash_text smaller_header">Inequity across neighborhoods has become top of mind for city planners. Some face higher poverty rates while others struggle more with medical issues.',
+                 '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out economic, health and other risk factors across neighborhoods in your city</strong></h4>',
                  '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
                  '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
-                 '<h4 class = splash_text smaller_header>Get to know the numbers behind the health of your neighborhoods</h4>')
+                 '<h4 class = splash_text smaller_header>Get to know the numbers behind your neighborhoods</h4>')
             
             )
     ),
@@ -691,11 +702,11 @@ output$current_page <- renderUI({
                               dropdownButton(
                                 checkboxInput('all_health_factors', "Select all"),
                                 checkboxGroupInput(
-                                  'health_factors', 'Medical statistics',
+                                  'health_factors', 'Health factors',
                                   choices = HEALTH_CHOICES,
                                   selected = health_risk_factors
                                 ),
-                                label = 'Medical statistics',
+                                label = 'Health factors',
                                 circle = FALSE
                               )),
                           div(class = "factor_selector",
@@ -755,7 +766,7 @@ output$current_page <- renderUI({
              '<h4><strong>Q: </strong>What does this app help me with?</h4>',
              '<h5><strong>A: </strong>You\'ve got resources & services to allocate in your city. Where should you put those resources to hit the populations in most need of those services? This map shows where the data would point those resources. <i>The data can\'t capture everything about a neighborhood,</i> but it can help inform decisions on where to put resources.</h5>',
              '<h4><strong>Q: </strong>What does the map show?</h4>',
-             '<h5><strong>A: </strong>It shows each census tract (loosely each neighborhood in a city) ranked from 0%ile to 90%ile based on the metrics you choose. Metrics include unemployment rates, obesity rates, and low education rates (% of adults with no diploma).</h5>',
+             '<h5><strong>A: </strong>It shows each census tract (loosely each neighborhood in a city) ranked from 0%ile to 90%ile based on the metrics you choose. It shows what neighborhoods seem to be better off and which need more assistance. Metrics include unemployment rates, obesity rates, and low education rates (% of adults with no diploma).</h5>',
              '<h4><strong>Q: </strong>What does "0%ile" or "90%ile" mean?</h4>',
              '<h5><strong>A: </strong>"0%ile" means that 90% or more of the other neighborhoods in the city have a higher score. "90%ile" means less than 10% of the other neighborhoods have a higher score.</h5>',
              '<h4><strong>Q: </strong>What is being scored?</h4>',
@@ -791,9 +802,17 @@ HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://
 ######### Allowing to filter by state ###########
 
 output$select_city <- renderUI({
+  selected_cities = ''
+  
+  if(input$state != ''){
+    selected_cities = cities_cdc[grep(paste0(input$state, '$'), cities_cdc)][order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))]
+  }
+  
+  
   selectizeInput(
-    'city', HTML('Search for your city</br><small>(Largest 500 US cities only)</small>'), choices = 
-      c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)])[order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))], multiple = FALSE,
+    'city', HTML('Search for your city</br><small>(Largest 500 US cities only)</small>'), choices = selected_cities,
+      # c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)])[order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))],
+    multiple = FALSE,
     options = list(
 #      placeholder = 'Enter City name',
       onInitialize = I(paste0('function() { this.setValue("',paste(location, collapse = ','),'"); }')),

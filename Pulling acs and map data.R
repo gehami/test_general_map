@@ -81,6 +81,140 @@ for(ACS_YEAR in START_ACS_YEAR:END_ACS_YEAR){
 }
 
 
+####### Identifying tracts for each city in the US - all_tract_city_dictionary#########
+
+library(rgeos)
+library(tigris)
+library(sp)
+library(hash)
+library(magrittr)
+
+#given a single row in an spdf, returns spdf row with only the largest polygon (by area)
+get_largest_shape = function(spdf, row_id = 1){
+  require(sp)
+  spolys = spdf@polygons[[1]]@Polygons
+  max_area = 0
+  for(n in seq_along(spolys)){
+    if(spolys[[n]]@area > max_area){
+      max_area = spolys[[n]]@area
+      max_area_n = n
+    }
+  }
+  single_poly = Polygons(list(spolys[[max_area_n]]), row_id)
+  single_spoly = SpatialPolygons(list(single_poly))
+  proj4string(single_spoly) = spdf@proj4string
+  data_for_spdf = data.frame(spdf@data[1,], stringsAsFactors = FALSE, row.names = row_id)
+  ret_spdf = SpatialPolygonsDataFrame(single_spoly, data = data_for_spdf, match.ID = TRUE)
+  return(ret_spdf)
+}
+#given two shapes (spdf), determines what %age of points one is within the other
+points_in_shape = function(shape, shape_within, ret_perc = TRUE, n = 1){
+  points = SpatialPoints(shape_within[n,]@polygons[[1]]@Polygons[[1]]@coords, proj4string = shape_within@proj4string)
+  if(ret_perc) return(length(which(!is.na(over(points, shape)[,1])))/nrow(points@coords))
+  return(length(which(!is.na(over(points, shape)[,1]))))
+}
+#given all of the census tracts, returns the census tracts that are within the city limits and additional tracts 
+tracts_in_shape = function(tracts, shape, contain_threshold = .5){
+  require(rgeos)
+  if(contain_threshold <= 0){
+    return(tracts[which(gIntersects(shape, tracts, byid = TRUE)),])
+  }
+  contain_tracts = tracts[which(gContains(shape, tracts, byid = TRUE)),]
+  if(is.numeric(contain_threshold) & contain_threshold < 1){
+    border_tracts = tracts[which(gOverlaps(shape, tracts, byid = TRUE)),]
+    keep_tracts = NULL
+    for(n in seq_len(nrow(border_tracts))){
+      if(points_in_shape(shape, border_tracts, ret_perc = TRUE, n) > contain_threshold){
+        keep_tracts = c(keep_tracts, n)
+      }
+    }
+    contain_tracts = rbind(contain_tracts, border_tracts[keep_tracts,])
+  }
+  return(contain_tracts)
+}
+#given the city name, the county fips for the city, and the state abbreviation, returns all of the tracts in that city
+get_tracts_in_city = function(city_name, county_fips, state_abb, contain_threshold = 0){
+  require(rgeos)
+  require(tigris)
+  county_tracts = tryCatch(tracts(state_abb, county_fips, cb = TRUE),
+                           error = function(e) tracts(state_abb, county_fips))
+  city_shape = tryCatch({places(state_abb, cb = TRUE)}, 
+                        error = function(e) places(state_abb))
+  
+  city_shape = city_shape[city_shape$NAME == city_name,] %>% get_largest_shape()
+  
+  # shape = city_shape
+  # tracts = county_tracts
+  ret_tracts = tracts_in_shape(county_tracts, city_shape, contain_threshold = contain_threshold)
+  return(ret_tracts$GEOID)
+}
+
+#pulling together mapping of all cities and tracts
+city_to_county_map = read.csv('uscities-counties.csv', stringsAsFactors = FALSE)
+
+
+#creating a hash for each city to have its own list of tracts, and a large list of all the tracts to include
+include_tracts = NULL
+fail_cities = NULL
+#dictionary for city and tracts
+all_tract_city_dictionary = hash::hash()
+
+missing_cities = NULL
+
+CONTAIN_THRESHOLD = 0
+past_file_name = NULL
+past_past_file_name = NULL
+homewd = getwd()
+for(n in 1:length(state.abb)){
+  state_abb = state.abb[n]
+  
+  
+  state = tigris::places(state = state_abb)
+  
+  state$NAME = gsub(' \\([[:print:]]+\\)$', '',state$NAME) #cleaning state name
+  if(length(which(state$NAME %in% city_to_county_map$city)) != length(state$NAME)) warning(paste0('some cities missing in ', state_abb)) #confirming all cdc cities are in city-to-county-map
+  #tracking missing cities
+  missing_cities = c(missing_cities, state[which(!(state$NAME %in% city_to_county_map$city)),]$NAME)
+  
+  for(i in which(state$NAME %in% city_to_county_map$city)){
+    city = state[i,]
+    city_state_name = paste0(city$NAME, ' ', state_abb)
+    city_county = city_to_county_map[which(paste0(city_to_county_map$city, city_to_county_map$state_id) %in% paste0(city$NAME, state_abb)),
+                                     which(colnames(city_to_county_map) %in% c("city", "county_name", 'county_fips', 
+                                                                               'state_name', 'state_id'))]
+    
+    city_name = city$NAME
+    county_fips = substr(city_county$county_fips, nchar(city_county$county_fips) - 2, nchar(city_county$county_fips))[1]
+    
+    tryCatch({tracts_in_city = get_tracts_in_city(city_name, county_fips, state_abb, contain_threshold = CONTAIN_THRESHOLD)
+    # include_tracts = c(include_tracts, tracts_in_city)
+    all_tract_city_dictionary[[city_state_name]] = tracts_in_city},
+    error = function(e){
+      fail_cities = c(fail_cities, city_state_name)
+    })
+    #testing to make sure it works. It seems to.
+    # state_tracts = tracts(state_abb, county_fips)
+    # state_tracts_for_city = state_tracts[state_tracts$GEOID %in% tracts_in_city,]
+    # plot(state_tracts_for_city, border = 'red')
+    # plot(city, add = TRUE)
+
+    if(i %% 50 == 0){print(paste0(i, ' of ', length(which(state$NAME %in% city_to_county_map$city)), ' in state ', state_abb))}
+  }
+  setwd('data_tables')
+  file_name = paste0('All tracts in all US cities - state ', state_abb, '.rds')
+  saveRDS(all_tract_city_dictionary, file = file_name)
+  if(!is.null(past_past_file_name)){
+    file.remove(past_past_file_name)
+    past_past_file_name = past_file_name
+    past_file_name = file_name
+  }else if(!is.null(past_file_name)){
+    past_past_file_name = past_file_name
+    past_file_name = file_name
+  }else{
+    past_file_name = file_name
+  }
+}
+setwd(homewd)
 
 
 
@@ -398,7 +532,81 @@ trimmed_us_tracts = all_us_tracts[all_us_tracts$GEOID %in% all_tracts,]
 
 saveRDS(trimmed_us_tracts, file = 'data_tables/trimmed_tract_data.rds')
 
+######### saving all the tracts in the country, not only the trimmed tracts ######### 
+require(tigris)
+require(magrittr)
+all_us_tracts = tracts(state = state.abb[1])
+for(state_abb in c(state.abb[-1], 'DC')){
+  all_us_tracts = rbind(all_us_tracts, tracts(state = state_abb))
+}
 
+all_tract_city_dictionary = readRDS('data_tables/All tracts in all US cities - state WY.rds')
+all_tracts_in_us = values(all_tract_city_dictionary) %>% unlist() %>% unique()
+length(which(as.character(all_tracts_in_us) %in% all_us_tracts$GEOID)) == length(all_tracts_in_us)
+
+
+#Saving this file outside of the github folders since it can't be loaded onto the repo.
+startwd = getwd()
+setwd('../Larger datasets')
+saveRDS(all_us_tracts, file = 'all_us_tract_shapes.rds')
+setwd(startwd)
+
+############ Creating the database for each county's tracts ##############
+
+library(hash)
+library(tigris)
+library(magrittr)
+
+#structure of folders
+#overall --> county shapefiles of tracts
+
+
+#first we have to map every city to the counties it is within
+
+#loading in the city to county mapping
+
+
+#loading the city to tract hash mapping
+all_tract_city_dictionary = readRDS('data_tables/All tracts in all US cities - state WY.rds')
+
+all_tract_city_dictionary[["Abbotsford WI"]]
+
+#seeing how many cities have 0 tracts in them - 81, which is not bad. out of some 20,000. We're okay
+zero_count = 0
+for(city in keys(all_tract_city_dictionary)){
+  if(length(all_tract_city_dictionary[[city]]) < 1){
+    zero_count = zero_count + 1
+  }
+}
+
+#mapping every city to it's counties
+city_to_county_hash = hash::hash()
+cities_with_no_tracts = NULL
+#So the county fips code is located as digits 3-5 in the GEOID. Therefore we can extract all counties for each city
+#by taking all of the unique sets of digits 3-5 in a given city's GEOID. The counties would be 3-digit fips codes
+for(city in keys(all_tract_city_dictionary)){
+  city_tracts = all_tract_city_dictionary[[city]]
+  if(length(city_tracts) < 1){
+    cities_with_no_tracts = c(cities_with_no_tracts, city)
+    city_to_county_hash[[city]] = NULL
+  }else{
+    city_to_county_hash[[city]] = unique(substr(city_tracts, 1, 5))
+  }
+}
+saveRDS(city_to_county_hash, 'data_tables/city_to_county_hash.rds')
+
+
+
+
+#okay now every city is mapped to it's coutnies...so now we need to create the files for the counties
+all_county_fips = values(city_to_county_hash) %>% unlist() %>% unique()
+all_state_fips = unique(substr(all_county_fips, 1,2))
+
+#saving each county as its own shapefile of tracts
+for(county_fips in all_county_fips){
+  county_tracts_shapefile = tigris::tracts(state = substr(county_fips,1,2), county = substr(county_fips, 3,5))
+  saveRDS(county_tracts_shapefile, paste0('data_tables/All county shape data/', county_fips))
+}
 
 
 
