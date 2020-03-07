@@ -24,7 +24,8 @@ QOL_CHOICES = data_code_book$risk_factor_name[grep('qol', data_code_book$metric_
 
 city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')
 all_cities = unlist(hash::keys(city_tract_map))
-
+big_city_tract_map = readRDS('data_tables/tract_city_dictionary.rds')
+big_cities = unlist(hash::keys(big_city_tract_map))
 
 health_risk_factors = ''
 economic_factors = ''
@@ -43,6 +44,9 @@ YEAR_RANGE = c(2016,2018)
 # states_cdc = unique(cdc_2018$stateabbr)
 cities_cdc = all_cities
 states_cdc = unique(substr(all_cities, nchar(all_cities)-1, nchar(all_cities)))[order(unique(substr(all_cities, nchar(all_cities)-1, nchar(all_cities))))]
+
+##Marking which datasets do not have data for smaller cities at the tract level
+NO_SMALL_DATA = c('CDC')
 
 
 
@@ -415,9 +419,15 @@ get_ind_vars_for_model = function(spdf, risk_vars, data_code_book, MAX_LOC_DIST 
   ids = spdf@data$GEOID
   ind_vars = data.frame(GEOID = ids, x_vars, stringsAsFactors = FALSE) #all the ind vars and GEOID id tag
   
-  neib_matrix = neib_avg_scores(x_vars, ids, loc_dist_matrix, na.rm = TRUE)
-  
-  big_ind_dat = merge(ind_vars, neib_matrix, by = 'GEOID')
+  #fail-safe in case a neighborhood 
+  if(nrow(spdf@data) >= 2){
+    neib_matrix = neib_avg_scores(x_vars, ids, loc_dist_matrix, na.rm = TRUE)
+    
+    big_ind_dat = merge(ind_vars, neib_matrix, by = 'GEOID')
+    
+  }else{
+    big_ind_dat = ind_vars
+  }
   
   return(big_ind_dat)
 }
@@ -524,7 +534,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   return(map_all)
 }
 
-# ######## Debugging setup ###########
+# ######## Debugging setup NEED TO UPDATE ###########
 # #libraries
 # library(shiny)
 # library(shinyWidgets)
@@ -1057,6 +1067,7 @@ observeEvent(input$all_violence_factors, {
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+
 #health
 observeEvent(input$all_health_factors, {
   if(input$all_health_factors){
@@ -1072,6 +1083,9 @@ observeEvent(input$all_health_factors, {
     }
   }
 }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+
+
 
 
 #economic
@@ -1140,6 +1154,14 @@ observeEvent(input$map_it,{
     
     progress$set(message = "Recording inputs", value = 0)
     
+    #marking if it is a small city or not. If it's a small city then we need to remove all inputs that are from the CDC, since CDC does not have neighborhood data for small cities
+    small_city = FALSE
+    if(!(input$city %in% big_cities)){
+      small_city = TRUE
+      print('small city')
+    }
+    
+    
     # output$warn = NULL
     inputs <- inputs_react()
     inputs[['cities']] <- input$city
@@ -1150,6 +1172,16 @@ observeEvent(input$map_it,{
     # inputs[['at-risk_factors']] <- input$violence_factors
     # inputs[['qol_factors']] <- input$qol_factors
     # print(inputs)
+    
+    ##removing any inputs that do not apply to small cities if this is a small city
+    if(small_city){
+      remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
+      for(i in keys(inputs)){
+        inputs[[i]] = inputs[[i]][which(!(inputs[[i]] %in% remove_vars))]
+        if(length(inputs[[i]]) == 0) inputs[[i]] = NULL
+      }
+    }
+    
 
     #saving inputs for debugging
     # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
@@ -1157,46 +1189,68 @@ observeEvent(input$map_it,{
     ###### opening files and doing the things ######
     ####### Reading in data ########
     
-    #reading in the cdc data
-    progress$set(message = "Loading CDC data", value = .05)
-    if(!exists("cdc_hash")){cdc_hash = hash()}
-    years = seq(inputs$year_range[1], inputs$year_range[2])
-    for(year in years){
-      if(!(year %in% keys(cdc_hash))){
-        cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
-        colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
-        cdc_hash[[as.character(year)]] = cdc_data
+    #reading in the cdc data if it is a big city
+    if(!small_city){
+      progress$set(message = "Loading CDC data", value = .05)
+      if(!exists("cdc_hash")){cdc_hash = hash()}
+      years = seq(inputs$year_range[1], inputs$year_range[2])
+      for(year in years){
+        if(!(year %in% keys(cdc_hash))){
+          cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
+          colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
+          cdc_hash[[as.character(year)]] = cdc_data
+        }
       }
+    }else{
+      print("Imma smol city so I don't need CDC data")
     }
     
     
     
     
-    #reading in the acs data. Note that the year of the data is actually the year before the key 
-    #(i.e. acs_hash[['2018']] actually stores 2017 acs data), becuase the acs data is one year behind the cdc data. 
+    #reading in the acs data. 
     progress$set(message = "Loading Census data", value = .1)
     if(!exists("acs_hash")){acs_hash = readRDS('data_tables/acs_dat_hash.rds')}
 
     #reading in the spatial data
     progress$set(message = "Loading maps", value = .15)
-    if(!exists('trimmed_tracts')){trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')}
+    
+    #First we need to identify the tracts in the city
+    if(!exists('city_tract_map')){city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')}
+    tracts_in_city = city_tract_map[[inputs$cities]]
+    #then we need to identify which counties are connected to the city so we can pull those counties into the map
+    if(!exists('city_county_map'))city_county_map = readRDS('data_tables/city_to_county_hash.rds')
+    #pull all the counties the city is a part of
+    city_counties = city_county_map[[inputs$cities]]
+    #pulls the first county the city is a part of
+    county_map = readRDS(paste0('data_tables/All county shape data/', city_counties[1]))
+    #pulls additional counties the city is a part of
+    if(length(city_counties) > 1){
+      for(n in 2 : length(city_counties)){
+        county_map = rbind(county_map, readRDS(paste0('data_tables/All county shape data/', city_counties[n])))
+      }
+    }
+    #makes the tract map for all the city
+    tracts_map = county_map[county_map$GEOID %in% tracts_in_city,]
+    
+    
+    #checking to make sure that my ACS data holds all tracts, it does. blessings on blessings
+    # all_tracts = hash::values(city_tract_map) %>% unlist() %>% unique()
+    # length(all_tracts %in% acs_year$GEOID) == length(all_tracts)
+    
+    # if(!exists('trimmed_tracts')){trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')}
     
     #reading in the tract_city_database
-    if(!exists('tract_city_dictionary')){tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')}
+    # if(!exists('tract_city_dictionary')){tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')}
     
     progress$set(message = "Loading maps", value = .20)
     
-    #reading in codebook to translate the names of the acs vars to their name in the dataset
-    # if(!exists('codebook')){
-    #   codebook = read.csv('variable_mapping.csv', stringsAsFactors = FALSE)
-    # }
-    
 
     #get just the tracts from the cities that we care about
-    city_tracts = tract_city_dictionary[inputs$cities] %>% values() %>% unlist() %>% as.character()
+    # city_tracts = tract_city_dictionary[inputs$cities] %>% values() %>% unlist() %>% as.character()
     
     #identifying which tracts to use
-    tracts_map = trimmed_tracts[trimmed_tracts$GEOID %in% city_tracts,]
+    # tracts_map = trimmed_tracts[trimmed_tracts$GEOID %in% city_tracts,]
     
     
     
@@ -1221,10 +1275,15 @@ observeEvent(input$map_it,{
     city_all_dat_hash = hash::hash() 
     for(year in inputs$year_range[1]:inputs$year_range[2]){
       acs_year = acs_hash[[as.character(year)]]
-      acs_year = acs_year[acs_year$GEOID %in% city_tracts,]
-      cdc_year = cdc_hash[[as.character(year)]]
-      cdc_year = cdc_year[cdc_year$GEOID %in% city_tracts,]
-      city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
+      acs_year = acs_year[acs_year$GEOID %in% tracts_in_city,]
+      if(!small_city){
+        cdc_year = cdc_hash[[as.character(year)]]
+        cdc_year = cdc_year[cdc_year$GEOID %in% tracts_in_city,]
+        city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
+      }
+      else{
+        city_all_dat_hash[[as.character(year)]] = acs_year[!duplicated(acs_year$GEOID),]
+      }
     }
     
     city_all_spdf_hash = hash::hash()
