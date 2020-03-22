@@ -657,6 +657,9 @@ initial_map_react <- reactiveVal()
 example_past_spdf_react <- reactiveVal()
 
 
+
+
+
 # print(inputs)
 
 ##### UI ##########
@@ -707,53 +710,7 @@ output$current_page <- renderUI({
                       h3('Select a preset group of metrics'),
                       uiOutput('preset_buttons'),
                       h3('Or customize your metrics of interest'),
-                      div(id = 'factor_selectors', 
-                          div(class = "factor_selector", 
-                              dropdownButton(
-                                checkboxInput('all_health_factors', "Select all"),
-                                checkboxGroupInput(
-                                  'health_factors', 'Health factors',
-                                  choices = HEALTH_CHOICES,
-                                  selected = health_risk_factors
-                                ),
-                                label = 'Health factors',
-                                circle = FALSE
-                              )),
-                          div(class = "factor_selector",
-                              dropdownButton(
-                                checkboxInput('all_economic_factors', "Select all"),
-                                checkboxGroupInput(
-                                  'economic_factors', 'Economic factors',
-                                  choices = ECONOMIC_CHOICES,
-                                  selected = economic_factors
-                                ),
-                                label = 'Economic factors',
-                                circle = FALSE
-                              )),
-                          div(class = "factor_selector",
-                              dropdownButton(
-                                checkboxInput('all_violence_factors', "Select all", value = FALSE),
-                                checkboxGroupInput(
-                                  'violence_factors', 'At-risk factors',
-                                  choices = VIOLENCE_CHOICES, selected = violence_risk_factors
-                                ),
-                                label = 'At-risk factors',
-                                circle = FALSE
-                              )),
-                          div(class = "factor_selector",
-                              dropdownButton(
-                                checkboxInput('all_qol_factors', "Select all"),
-                                checkboxGroupInput(
-                                  'qol_factors', 'Other quality-of-life factors',
-                                  choices = QOL_CHOICES, 
-                                  selected = qol_factors
-                                ),
-                                label = 'Quality-of-life factors',
-                                circle = FALSE
-                              ))
-                          # sliderInput('year_range', 'Which years should we look at?',
-                          #             YEAR_RANGE[1], YEAR_RANGE[2], value = year_range),
-                      ),
+                      uiOutput('custom_metrics'),
                       actionBttn('map_it', 'Map custom metrics', size = 'sm'),
                       uiOutput('input_warning'),
                       uiOutput('loading_sign')
@@ -769,7 +726,7 @@ output$current_page <- renderUI({
              '<h4><strong>Q: </strong>How do I navigate this page?</h4>',
              '<h5><strong>A: </strong><ol><li>Select your city from the city drop-down. You may type in your city or select the state and then the city. Due to privacy concerns, only the 500 US cities with the largest population are avaialable. Smaller city maps can be made on request.</li>
              <li>Select the metrics you are interested in studying. These can be economic factors such as unemployment or medical factors such as obesity. For a simple selection of metrics, click on one of the three presets. For a fully-custom map, select your metrics individually below the presets.</li>
-             <li>Click the blue button to map the metrics and wait about 20-30 seconds for delivey. If has finished loading but the screen is blank, wait an additional 20 seconds before refreshing, as the map may take some time to render.</li>
+             <li>Click the blue button to map the metrics and wait about 20-30 seconds for delivey. If it has finished loading but the screen is blank, wait an additional 20 seconds before refreshing, as the map may take some time to render.</li>
              </ol></h5>',
 #             '<h4><strong>Q: </strong>Why does it take so long to load / why is my screen blank for so long?</h4>',
 #             '<h5><strong>A: </strong>Running this app on a faster server would be expensive so the mapping process may take 10-20 seconds to show even after loading.</h5>',
@@ -815,12 +772,13 @@ output$select_city <- renderUI({
   selected_cities = ''
   
   if(input$state != ''){
+  
+  if(input$state != ''){
     selected_cities = cities_cdc[grep(paste0(input$state, '$'), cities_cdc)][order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))]
   }
   
-  
   selectizeInput(
-    'city', HTML('Search for your city</br><small>(Largest 500 US cities only)</small>'), choices = selected_cities,
+    'city', HTML(paste0('Search for your city', '</br><small>Cities with small populations will not show health-related data due to privacy concerns</small>')), choices = selected_cities,
       # c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)])[order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))],
     multiple = FALSE,
     options = list(
@@ -829,6 +787,7 @@ output$select_city <- renderUI({
       maxOptions = 1000
     )
   )
+  }else{NULL}
 })
 
 
@@ -855,32 +814,14 @@ preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_
 #shout out to the real ones at w3schools for this popup function: https://www.w3schools.com/howto/howto_js_popup.asp
 
 output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
-  # div(class = 'preset-buttons-dropdown', dropdownButton(
-  #   HTML('<h5><strong><i>', i[[3]], '</i></strong></h5>', '<h5>Metrics included:</h5>', paste(c(1:length(i[[2]])), ')', i[[2]], collapse = "<br>")),
-  #   actionBttn(inputId = i[[1]], label = "Map it", size = 'sm'),
-  #   label = i[[1]],
-  #   circle = FALSE
-  # ))
+
   div(class = 'preset-buttons-dropdown', 
       actionBttn(inputId = i[[1]], label = i[[1]], size = 'sm'),
-      # HTML(paste0('<div class="info-popup" onclick = "popupFunction', i[[4]],'()"><p class = "preset-button-desc"><i>'),
-      #      i[[3]],paste0('<div class="info-popuptext" id="myInfoPopup',i[[4]],'">Metrics included'),
-      #   paste(c(1:length(i[[2]])), ') ', i[[2]], collapse = "<br>", sep = ''),'</div>
-      #    </div>', sep = '')
       HTML('<p class = "preset-button-desc"><i>', i[[3]], '</i></p>')
       )
-  
 }))
 
-# HTML('<div class = "info-popup">',
-#      '<i class="fa fa-info-circle"></i>',
-#      '</div>'), '</div>',
-# '<div class = "info-popuptext" id = "myInfoPopup" onclick = "popupFunction()">', info_popup_text, '</div>', paste(label_string, collapse = '<br>'))
 
-
-# output$preset_buttons <- renderUI(lapply(preset_options, function(i){
-#                                        actionBttn(inputId = i, label = i, size = 'sm')
-#                                      }))
 
 clicked_preset <- reactiveVal(FALSE)
 
@@ -987,6 +928,94 @@ observeEvent(input[[preset_options[3]]], {
   
   
 })
+
+
+########## removing CDC data if small city is chosen #########
+
+observeEvent(input$city, handlerExpr = {
+  if(input$city %in% big_cities | input$city == ""){
+    preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_DESC_TEXT, 1),
+                               list(preset_options[2], metrics_selected_2, PRESET_2_DESC_TEXT, 2),
+                               list(preset_options[3], metrics_selected_3, PRESET_3_DESC_TEXT, 3))
+    
+    
+    health_input_choices = HEALTH_CHOICES
+    economic_input_choices = ECONOMIC_CHOICES
+    at_risk_input_choices = VIOLENCE_CHOICES
+    qol_input_choices = QOL_CHOICES
+    
+  }else{
+    preset_options_list = list(list(preset_options[1], metrics_selected_1, PRESET_1_DESC_TEXT, 1),
+                               #list(preset_options[2], metrics_selected_2, PRESET_2_DESC_TEXT, 2),#commenting out medical data
+                               list(preset_options[3], metrics_selected_3, PRESET_3_DESC_TEXT, 3))
+    
+    
+    remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
+    health_input_choices = HEALTH_CHOICES[which(!(HEALTH_CHOICES %in% remove_vars))]
+    economic_input_choices = ECONOMIC_CHOICES[which(!(ECONOMIC_CHOICES %in% remove_vars))]
+    at_risk_input_choices = VIOLENCE_CHOICES[which(!(VIOLENCE_CHOICES %in% remove_vars))]
+    qol_input_choices = QOL_CHOICES[which(!(QOL_CHOICES %in% remove_vars))]
+    
+  }
+  output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
+    
+    div(class = 'preset-buttons-dropdown', 
+        actionBttn(inputId = i[[1]], label = i[[1]], size = 'sm'),
+        HTML('<p class = "preset-button-desc"><i>', i[[3]], '</i></p>')
+    )
+  }))
+  
+  output$custom_metrics <- renderUI(
+    div(id = 'factor_selectors', 
+        div(class = "factor_selector", 
+            dropdownButton(
+              checkboxInput('all_health_factors', "Select all"),
+              checkboxGroupInput(
+                'health_factors', 'Health factors',
+                choices = health_input_choices,
+                selected = health_risk_factors
+              ),
+              label = 'Health factors',
+              circle = FALSE
+            )),
+        div(class = "factor_selector",
+            dropdownButton(
+              checkboxInput('all_economic_factors', "Select all"),
+              checkboxGroupInput(
+                'economic_factors', 'Economic factors',
+                choices = economic_input_choices,
+                selected = economic_factors
+              ),
+              label = 'Economic factors',
+              circle = FALSE
+            )),
+        div(class = "factor_selector",
+            dropdownButton(
+              checkboxInput('all_violence_factors', "Select all", value = FALSE),
+              checkboxGroupInput(
+                'violence_factors', 'At-risk factors',
+                choices = at_risk_input_choices, selected = violence_risk_factors
+              ),
+              label = 'At-risk factors',
+              circle = FALSE
+            )),
+        div(class = "factor_selector",
+            dropdownButton(
+              checkboxInput('all_qol_factors', "Select all"),
+              checkboxGroupInput(
+                'qol_factors', 'Other quality-of-life factors',
+                choices = qol_input_choices, 
+                selected = qol_factors
+              ),
+              label = 'Quality-of-life factors',
+              circle = FALSE
+            ))
+    )
+  )
+  
+})
+
+
 
 
 ######### Tracking checkboxgroups to update inputs_react() ############
