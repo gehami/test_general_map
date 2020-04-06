@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages(c('shiny', 'rmarkdown', 'rsconnect'), repos='https://cloud.r-project.org/')"
 
 # install dependencies of the general map app
-RUN R -e "install.packages(c('shinyWidgets', 'tools', 'hash', 'leaflet', 'magrittr', 'shinyBS', 'sp', 'rgeos', 'shinyjs', 'htmltools'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('shinyWidgets', 'tools', 'hash', 'leaflet', 'leaflet.minicharts', 'magrittr', 'shinyBS', 'sp', 'rgeos', 'shinyjs', 'htmltools'), repos='https://cloud.r-project.org/')"
 
 
 

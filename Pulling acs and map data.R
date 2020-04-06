@@ -10,7 +10,7 @@ library(purrr)
 START_ACS_YEAR = 2014
 END_ACS_YEAR = 2018
 CONTAIN_THRESHOLD = 0.5
-
+ACS_YEAR = START_ACS_YEAR
 
 ######## General functions #########
 #like the %in% function, but retains the order of the vector that your checking to see if the other vector is in it.
@@ -358,7 +358,9 @@ clipr::write_clip(state$NAME)
 
 saveRDS(tract_city_dictionary, 'data_tables/tract_city_dictionary.rds')
 
-###### filtering the acs data down to only the tracts in the 500 cdc cities - acs_hash ##########
+###### creating the hash of acs data across all cities in us - acs_hash ##########
+library(hash)
+library(magrittr)
 
 acs_hash = hash::hash()
 years = seq(2014, 2018)
@@ -414,7 +416,7 @@ for(year in years){
 require(magrittr)
 all_us_tracts = readRDS('data_tables/All tracts in all US cities - state WY.rds') %>% hash::values() %>% unlist() %>% unique()
 
-trimmed_tracts = values(tract_city_dictionary) %>% unlist() %>% unique()
+# trimmed_tracts = values(tract_city_dictionary) %>% unlist() %>% unique()
 
 for(acs_key in keys(acs_hash)){
   new_acs = acs_hash[[acs_key]]
@@ -428,10 +430,11 @@ saveRDS(acs_hash, file = 'data_tables/acs_dat_hash.rds')
 
 ########## Identifying the zipcodes of each tract, adding to acs_hash - acs_hash ###############
 
-tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')
+# tract_city_dictionary = readRDS('data_tables/tract_city_dictionary.rds')
+all_us_tracts = readRDS('data_tables/All tracts in all US cities - state WY.rds') %>% hash::values() %>% unlist() %>% unique()
 
-all_tracts = hash::values(tract_city_dictionary) %>% unlist() %>% unique()
-
+# all_tracts = hash::values(tract_city_dictionary) %>% unlist() %>% unique()
+all_tracts = all_us_tracts
 tract_zip_mapping = read.csv(url('https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt?#'), stringsAsFactors = FALSE)
 
 
@@ -460,8 +463,13 @@ for(n in seq_along(all_tracts)){
 #opening the zipcode to tract mapping, can be found here: https://www.census.gov/geographies/reference-files/2010/geo/relationship-files.html#par_textimage_674173622
 zip_shape = tigris::zctas()
 
-trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')
+# trimmed_tracts = readRDS('data_tables/trimmed_tract_data.rds')
+# trimmed_tracts_ordered = trimmed_tracts[in_match_order(trimmed_tracts$GEOID, all_tracts),]
+
+#Actually getting the zip codes for every tract in the US
+trimmed_tracts = readRDS('../Larger datasets/all_us_tract_shapes.rds')
 trimmed_tracts_ordered = trimmed_tracts[in_match_order(trimmed_tracts$GEOID, all_tracts),]
+
 
 # zip_shape@proj4string 
 # trimmed_tracts@proj4string #these are the same
@@ -489,12 +497,16 @@ identical(as.character(all_tracts), as.character(trimmed_tracts_ordered@data$GEO
 
 #works
 missing_tracts = which(all_tracts_to_zip_mapping$zipcodes == '')
+require(rgeos)
+require(sp)
 progress_tracker = 1
 for(n in missing_tracts){
   all_tracts_to_zip_mapping$zipcodes[n] = paste0(zips_of_tract(trimmed_tracts_ordered[n,], zip_shape)$zips, collapse = ', ')
   progress_tracker = progress_tracker + 1
   if(progress_tracker %% 10 == 0) print(progress_tracker/length(missing_tracts))
 }
+
+# saveRDS(all_tracts_to_zip_mapping, '../Larger datasets/all_us_tracts_to_zipcode_mapping.rds')
 
 #testing the above. This works.
 # n = missing_tracts[100]
@@ -503,6 +515,9 @@ for(n in missing_tracts){
 
 
 # all_tracts_to_zip_mapping[sample(1:nrow(all_tracts_to_zip_mapping), 10),]
+####### zipcodes part II - adding zipcodes to acs_hash - acs_hash ########
+
+all_tracts_to_zip_mapping = readRDS('../Larger datasets/all_us_tracts_to_zipcode_mapping.rds')
 
 acs_hash = readRDS('data_tables/acs_dat_hash.rds')
 
@@ -517,6 +532,41 @@ for(year in keys(acs_hash)){
 }
 
 saveRDS(acs_hash, file = 'data_tables/acs_dat_hash.rds')
+
+######### adding tract centroids to each tract - acs_hash #######
+
+acs_hash = readRDS('data_tables/acs_dat_hash.rds')
+
+#pulling in the census tracts for each state from the US census bureau site. 
+#This requires pulling a different file from their site for each state, which is figured out below
+
+#first identifying all of the state fips codes I need
+acs_base = acs_hash$`2018`
+all_state_fips = unique(substr(acs_base$GEOID, 1,2))
+
+tract_centroids = read.csv(paste0('https://www2.census.gov/geo/docs/reference/cenpop2010/tract/CenPop2010_Mean_TR',all_state_fips[1],'.txt'), 
+                           colClasses = c('character', 'character', 'character', 'numeric', 'numeric', 'numeric')) #reads in the fips code vars as characters and the pop, lat, and lon vars as numeric
+for(state_fips in all_state_fips[-1]){
+  tract_centroids = rbind(tract_centroids, 
+                          read.csv(paste0('https://www2.census.gov/geo/docs/reference/cenpop2010/tract/CenPop2010_Mean_TR', state_fips,'.txt'), 
+                                   colClasses = c('character', 'character', 'character', 'numeric', 'numeric', 'numeric'))) #reads in the fips code vars as characters and the pop, lat, and lon vars as numeric)
+}
+
+
+#simplifying the df above so that a merge function would only bring into acs_hash the columns we want, which is center_lat and center_lon
+tract_centroids_merge_df = data.frame(GEOID = paste0(tract_centroids$STATEFP, tract_centroids$COUNTYFP, tract_centroids$TRACTCE),
+                                      center_lat = tract_centroids$LATITUDE, center_lon = tract_centroids$LONGITUDE)
+
+#merging in the center_lat and center_lon values for each tract 
+for(year in keys(acs_hash)){
+  # acs_hash[[year]]$GEOID = as.character(acs_hash[[year]]$GEOID)
+  acs_hash[[year]]$center_lat = NULL
+  acs_hash[[year]]$center_lon = NULL
+  acs_hash[[year]] = merge(acs_hash[[year]], tract_centroids_merge_df, by = 'GEOID')
+}
+
+saveRDS(acs_hash, file = 'data_tables/acs_dat_hash.rds')
+
 
 ########## saving all the cities that I need as their own spatial files of tracts ##########
 
