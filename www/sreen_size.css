@@ -107,9 +107,6 @@ small.phone_popup{
   #map_container {
     height: 85vh;
   }
-  #select_year_div {
-    right: 1vw;
-  }
   #home_button {
     margin-top: 15px;
     left: 3px;
@@ -119,6 +116,9 @@ small.phone_popup{
       top: 15px;
       right: 5px;
       position: absolute;
+  }
+  #race_circles_div{
+    
   }
 
 }

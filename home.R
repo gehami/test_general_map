@@ -1,7 +1,18 @@
 # home page
 
 
-# county_list = toTitleCase(gsub("([^,]+)(,)([[:print:]]+)", "\\3 county, \\1", county.fips$polyname))
+###### Log of things to fix ##########
+
+#popup for race circles. RIght now you have the table html written but it's not translating. MAy try HTML() function, but unclear if that will fix
+#problem stems from fact that the pop-up has a set width of 51px when it should be ~150px
+
+#legend for race circles may be too large
+
+#the added race check box has funked up the mobile view. WIll need to put the "year_home_div" up higher on mobile
+
+
+
+
 
 ######## REading in codebook #########
 
@@ -508,7 +519,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   legend_val = u_tract_color_vals[order(u_tract_color_vals)][c(1,length(u_tract_color_vals))]
   
   map_all = map %>% addMarkers(group = 'Clear', lng = 10, lat = 10) %>% 
-    addMapPane('risk_tiles', zIndex = 410) %>%
+    addMapPane('risk_tiles', zIndex = 1) %>%
     addPolygons(data = present_spdf, fillColor = ~tract_pal(tract_color_vals), popup = present_spdf@data$label, stroke = T,
                 fillOpacity = TRACT_OPACITY, , weight = 1, opacity = 1, color = 'white', dashArray = '3',
                 highlightOptions = highlightOptions(color = 'white', weight = 2,
@@ -523,8 +534,8 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
                 fillOpacity = TRACT_OPACITY, , weight = 1, opacity = 1, color = 'white', dashArray = '3',
                 highlightOptions = highlightOptions(color = 'white', weight = 2,
                                                     bringToFront = FALSE, dashArray = FALSE),
-                group = as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), options = pathOptions(pane = "risk_tiles")) %>% 
-    # leaflet.minicharts::
+                group = as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), options = pathOptions(pane = "risk_tiles")) 
+  map_all = map_all %>% 
     addLegend(colors = tract_pal(legend_val[length(legend_val):1]), opacity = 0.7, position = 'bottomright',
               title = 'Risk factors level', labels = c('High (90%ile)', 'Low (0%ile)')) %>%
     # addLayersControl(baseGroups = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
@@ -532,6 +543,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
     showGroup(as.character(inputs$year_range[2])) %>% hideGroup('Clear') %>% 
     hideGroup(as.character(inputs$year_range[1])) %>% #hiding the first year layer
     hideGroup(as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))) #hiding the future year layer
+
   return(map_all)
 }
 
@@ -735,6 +747,7 @@ risk_vars_react <- reactiveVal()
 data_factors_react <- reactiveVal()
 initial_map_react <- reactiveVal()
 example_past_spdf_react <- reactiveVal()
+present_spdf_react <- reactiveVal()
 
 
 
@@ -1442,6 +1455,7 @@ observeEvent(input$map_it,{
     data_factors_react(data_factors)
     initial_map_react(initial_map)
     example_past_spdf_react(past_spdf[1,])
+    present_spdf_react(present_spdf)
     
     
    
@@ -1491,12 +1505,14 @@ observeEvent(input$map_it,{
               div(id = 'select_year_div', class = 'no_small_screen', pickerInput('select_year',
                                                       choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                   as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
-                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
+                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'),
+                  checkboxInput(inputId = 'race_circles', label = 'Race', value = FALSE, width = '71px')),
               div(id = 'home_and_year', class = 'no_big_screen',
                   div(id = 'select_year_div',  pickerInput('select_year_small',
                                                            choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                                                  as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
                                                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
+                  div(id = 'race_circles_div', checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE, width = '71px')),
                   
                   div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x')))
                   
@@ -1783,6 +1799,47 @@ observeEvent(input$select_year_small,{
   leafletProxy('map') %>% hideGroup(c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                       as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])))) %>%
     showGroup(as.character(input$select_year_small)) 
+})
+
+
+####### adding race circles ######
+
+observeEvent(input$race_circles, {
+  if(input$race_circles){
+    #adding in the racial demographics in the area
+    present_spdf = present_spdf_react()
+    #race popup is not working at the moment. Will need to figure this out later. 
+    # race_popup = paste0('<table><tbody><tr><td class="key">white</td><td class="value">',present_spdf@data$white,
+    #                     '</td></tr><tr><td class="key">black</td><td class="value">',present_spdf@data$black,
+    #                     '</td></tr><tr><td class="key">amiaknh</td><td class="value">',present_spdf@data$amiaknh,
+    #                     '</td></tr><tr><td class="key">asian</td><td class="value">',present_spdf@data$asian,
+    #                     '</td></tr><tr><td class="key">mixed</td><td class="value">',present_spdf@data$mixed,
+    #                     '</td></tr><tr><td class="key">hispanic</td><td class="value">',present_spdf@data$hispanic,
+    #                     '</td></tr></tbody></table>')
+    
+    print(head(present_spdf@data))
+    leafletProxy('map') %>% leaflet.minicharts::addMinicharts(lng = present_spdf$center_lon, lat = present_spdf$center_lat, type = 'pie',
+                                                            chartdata = present_spdf@data[,c("white", "black", "amiaknh", "asian",
+                                                                                             "mixed", "hispanic")],
+                                                            height = 20, width = 20, showLabels = FALSE, legend = TRUE,
+                                                            legendPosition = 'bottomright',
+                                                            popup = NULL)
+    
+  }else{
+    leafletProxy('map') %>% clearMinicharts() 
+  }  
+})
+#since the small phone and the big input have to have different names, this centralizes the update to impact the big input function
+observeEvent(input$race_circles_small,{
+  if(input$race_circles_small){
+    if(!input$race_circles){
+      updateCheckboxInput(session, inputId = 'race_circles', value = TRUE)
+    }
+  }else{
+    if(input$race_circles){
+      updateCheckboxInput(session, inputId = 'race_circles', value = FALSE)
+    }
+  }
 })
 
 ############# Updating map with updated metrics and reseting weights ##############
