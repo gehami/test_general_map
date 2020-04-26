@@ -1,19 +1,4 @@
 # home page
-
-
-###### Log of things to fix ##########
-
-#popup for race circles. RIght now you have the table html written but it's not translating. MAy try HTML() function, but unclear if that will fix
-#problem stems from fact that the pop-up has a set width of 51px when it should be ~150px
-
-#legend for race circles may be too large
-
-#the added race check box has funked up the mobile view. WIll need to put the "year_home_div" up higher on mobile
-
-
-
-
-
 ######## REading in codebook #########
 
 
@@ -548,185 +533,185 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
 }
 
 ######## Debugging setup ###########
-#libraries
-library(shiny)
-library(shinyWidgets)
-# library(maps)
-library(tools)
-# library(tidyverse)
-# library(tidycensus)
-library(hash)
-library(leaflet)
-library(magrittr)
-library(shinyBS)
-library(sp)
-library(rgeos)
-library(shinyjs)
-library(leaflet.minicharts)
+# #libraries
+# library(shiny)
+# library(shinyWidgets)
+# # library(maps)
+# library(tools)
+# # library(tidyverse)
+# # library(tidycensus)
+# library(hash)
+# library(leaflet)
+# library(magrittr)
+# library(shinyBS)
+# library(sp)
+# library(rgeos)
+# library(shinyjs)
+# library(leaflet.minicharts)
+# 
+# 
+# inputs = readRDS('inputs_outputs/debug_inputs.rds')
+# # inputs$cities = ''
 
 
-inputs = readRDS('inputs_outputs/debug_inputs.rds')
-# inputs$cities = ''
-
-
   
-  ###### Initial set-up #######
-  
-
-
-  #marking if it is a small city or not. If it's a small city then we need to remove all inputs that are from the CDC, since CDC does not have neighborhood data for small cities
-  small_city = FALSE
-  if(!(inputs$cities %in% big_cities)){
-    small_city = TRUE
-    print('small city')
-  }
-
-  ##removing any inputs that do not apply to small cities if this is a small city
-  if(small_city){
-    remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
-    for(i in keys(inputs)){
-      inputs[[i]] = inputs[[i]][which(!(inputs[[i]] %in% remove_vars))]
-      if(length(inputs[[i]]) == 0) inputs[[i]] = NULL
-    }
-  }
-  
-  
-  #saving inputs for debugging
-  # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
-  
-  ###### opening files and doing the things ######
-  ####### Reading in data ########
-  
-  #reading in the cdc data if it is a big city
-  if(!small_city){
-    # progress$set(message = "Loading CDC data", value = .05)
-    if(!exists("cdc_hash")){cdc_hash = hash()}
-    years = seq(inputs$year_range[1], inputs$year_range[2])
-    for(year in years){
-      if(!(year %in% keys(cdc_hash))){
-        cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
-        colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
-        cdc_hash[[as.character(year)]] = cdc_data
-      }
-    }
-  }else{
-    print("Imma smol city so I don't need CDC data")
-  }
-  
-
-  #reading in the acs data. 
-  # progress$set(message = "Loading Census data", value = .1)
-  if(!exists("acs_hash")){acs_hash = readRDS('data_tables/acs_dat_hash.rds')}
-  
-  #reading in the spatial data
-  # progress$set(message = "Loading maps", value = .15)
-  
-  #First we need to identify the tracts in the city
-  if(!exists('city_tract_map')){city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')}
-  tracts_in_city = city_tract_map[[inputs$cities]]
-  #then we need to identify which counties are connected to the city so we can pull those counties into the map
-  if(!exists('city_county_map'))city_county_map = readRDS('data_tables/city_to_county_hash.rds')
-  #pull all the counties the city is a part of
-  city_counties = city_county_map[[inputs$cities]]
-  #pulls the first county the city is a part of
-  county_map = readRDS(paste0('data_tables/All county shape data/', city_counties[1]))
-  #pulls additional counties the city is a part of
-  if(length(city_counties) > 1){
-    for(n in 2 : length(city_counties)){
-      county_map = rbind(county_map, readRDS(paste0('data_tables/All county shape data/', city_counties[n])))
-    }
-  }
-  #makes the tract map for all the city
-  tracts_map = county_map[county_map$GEOID %in% tracts_in_city,]
-  
-  
-  #checking to make sure that my ACS data holds all tracts, it does. blessings on blessings
-  # all_tracts = hash::values(city_tract_map) %>% unlist() %>% unique()
-  # length(all_tracts %in% acs_year$GEOID) == length(all_tracts)
-  
-  
-  
-  ####### Contstants #########
-  
-  param_hash = hash::copy(inputs)
-  hash::delete(c('cities', 'year_range'), param_hash)
-  data_factors = param_hash %>% values() %>% unlist()
-  if(length(dim(data_factors)) > 0){
-    data_factors = as.character(data_factors)
-    names(data_factors) = rep(keys(param_hash), length(data_factors))
-  }
-  
-  
-  
-  ######## final set-ups before initial map #########
-  
-  # progress$set(message = "Cleaning data", value = .30)
-  
-  
-  city_all_dat_hash = hash::hash() 
-  for(year in inputs$year_range[1]:inputs$year_range[2]){
-    acs_year = acs_hash[[as.character(year)]]
-    acs_year = acs_year[acs_year$GEOID %in% tracts_in_city,]
-    if(!small_city){
-      cdc_year = cdc_hash[[as.character(year)]]
-      cdc_year = cdc_year[cdc_year$GEOID %in% tracts_in_city,]
-      city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
-    }
-    else{
-      city_all_dat_hash[[as.character(year)]] = acs_year[!duplicated(acs_year$GEOID),]
-    }
-  }
-  
-  city_all_spdf_hash = hash::hash()
-  for(year in inputs$year_range[1]:inputs$year_range[2]){
-    city_data = merge(tracts_map@data, city_all_dat_hash[[as.character(year)]], by = 'GEOID')
-    city_spdf = tracts_map[tracts_map$GEOID %in% city_data$GEOID,]
-    city_spdf = city_spdf[order(city_spdf$GEOID),]
-    city_data = city_data[order(city_data$GEOID),]
-    city_spdf@data = city_data
-    city_all_spdf_hash[[as.character(year)]] = city_spdf
-  }
-  
-  # progress$set(message = "Developing metric scores", value = .35)
-  
-  #creating the scores
-  risk_vars = data_factors[!duplicated(as.character(data_factors))]
-  risk_weights = rep(INITIAL_WEIGHTS, length(risk_vars))
-  # spdf = city_all_spdf_hash[['2018']]
-  # #data_code_book = codebook[!duplicated(codebook$risk_factor_name),]
-  quantile_bins = QUANTILE_BINS
-  
-  
-  ####### making initial map ######
-  
-  
-  # progress$set(message = paste0("Designing map of ", inputs$year_range[1]), value = .40)
-  past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
-  print(head(past_spdf@data[,-ncol(past_spdf@data)]))
-  
-  # progress$set(message = paste0("Designing map of ", inputs$year_range[2]), value = .50)
-  present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
-  print(head(present_spdf@data[,-ncol(present_spdf@data)]))
-  
-    
-  # progress$set(message = paste0("Predicting map of ", inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), value = .60)
-  pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
-  present_spdf@data$pred_score = pred_list$raw_score
-  present_spdf@data$pred_quantile = pred_list$score_quantile
-  present_spdf@data$pred_label = pred_list$label
-  
-  
-  
-  # progress$set(message = "Rendering maps", value = .70)
-  initial_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
-  
-  
-
-
-
-
-
-
+  # ###### Initial set-up #######
+  # 
+  # 
+  # 
+  # #marking if it is a small city or not. If it's a small city then we need to remove all inputs that are from the CDC, since CDC does not have neighborhood data for small cities
+  # small_city = FALSE
+  # if(!(inputs$cities %in% big_cities)){
+  #   small_city = TRUE
+  #   print('small city')
+  # }
+  # 
+  # ##removing any inputs that do not apply to small cities if this is a small city
+  # if(small_city){
+  #   remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
+  #   for(i in keys(inputs)){
+  #     inputs[[i]] = inputs[[i]][which(!(inputs[[i]] %in% remove_vars))]
+  #     if(length(inputs[[i]]) == 0) inputs[[i]] = NULL
+  #   }
+  # }
+  # 
+  # 
+  # #saving inputs for debugging
+  # # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
+  # 
+  # ###### opening files and doing the things ######
+  # ####### Reading in data ########
+  # 
+  # #reading in the cdc data if it is a big city
+  # if(!small_city){
+  #   # progress$set(message = "Loading CDC data", value = .05)
+  #   if(!exists("cdc_hash")){cdc_hash = hash()}
+  #   years = seq(inputs$year_range[1], inputs$year_range[2])
+  #   for(year in years){
+  #     if(!(year %in% keys(cdc_hash))){
+  #       cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
+  #       colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
+  #       cdc_hash[[as.character(year)]] = cdc_data
+  #     }
+  #   }
+  # }else{
+  #   print("Imma smol city so I don't need CDC data")
+  # }
+  # 
+  # 
+  # #reading in the acs data. 
+  # # progress$set(message = "Loading Census data", value = .1)
+  # if(!exists("acs_hash")){acs_hash = readRDS('data_tables/acs_dat_hash.rds')}
+  # 
+  # #reading in the spatial data
+  # # progress$set(message = "Loading maps", value = .15)
+  # 
+  # #First we need to identify the tracts in the city
+  # if(!exists('city_tract_map')){city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')}
+  # tracts_in_city = city_tract_map[[inputs$cities]]
+  # #then we need to identify which counties are connected to the city so we can pull those counties into the map
+  # if(!exists('city_county_map'))city_county_map = readRDS('data_tables/city_to_county_hash.rds')
+  # #pull all the counties the city is a part of
+  # city_counties = city_county_map[[inputs$cities]]
+  # #pulls the first county the city is a part of
+  # county_map = readRDS(paste0('data_tables/All county shape data/', city_counties[1]))
+  # #pulls additional counties the city is a part of
+  # if(length(city_counties) > 1){
+  #   for(n in 2 : length(city_counties)){
+  #     county_map = rbind(county_map, readRDS(paste0('data_tables/All county shape data/', city_counties[n])))
+  #   }
+  # }
+  # #makes the tract map for all the city
+  # tracts_map = county_map[county_map$GEOID %in% tracts_in_city,]
+  # 
+  # 
+  # #checking to make sure that my ACS data holds all tracts, it does. blessings on blessings
+  # # all_tracts = hash::values(city_tract_map) %>% unlist() %>% unique()
+  # # length(all_tracts %in% acs_year$GEOID) == length(all_tracts)
+  # 
+  # 
+  # 
+  # ####### Contstants #########
+  # 
+  # param_hash = hash::copy(inputs)
+  # hash::delete(c('cities', 'year_range'), param_hash)
+  # data_factors = param_hash %>% values() %>% unlist()
+  # if(length(dim(data_factors)) > 0){
+  #   data_factors = as.character(data_factors)
+  #   names(data_factors) = rep(keys(param_hash), length(data_factors))
+  # }
+  # 
+  # 
+  # 
+  # ######## final set-ups before initial map #########
+  # 
+  # # progress$set(message = "Cleaning data", value = .30)
+  # 
+  # 
+  # city_all_dat_hash = hash::hash() 
+  # for(year in inputs$year_range[1]:inputs$year_range[2]){
+  #   acs_year = acs_hash[[as.character(year)]]
+  #   acs_year = acs_year[acs_year$GEOID %in% tracts_in_city,]
+  #   if(!small_city){
+  #     cdc_year = cdc_hash[[as.character(year)]]
+  #     cdc_year = cdc_year[cdc_year$GEOID %in% tracts_in_city,]
+  #     city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
+  #   }
+  #   else{
+  #     city_all_dat_hash[[as.character(year)]] = acs_year[!duplicated(acs_year$GEOID),]
+  #   }
+  # }
+  # 
+  # city_all_spdf_hash = hash::hash()
+  # for(year in inputs$year_range[1]:inputs$year_range[2]){
+  #   city_data = merge(tracts_map@data, city_all_dat_hash[[as.character(year)]], by = 'GEOID')
+  #   city_spdf = tracts_map[tracts_map$GEOID %in% city_data$GEOID,]
+  #   city_spdf = city_spdf[order(city_spdf$GEOID),]
+  #   city_data = city_data[order(city_data$GEOID),]
+  #   city_spdf@data = city_data
+  #   city_all_spdf_hash[[as.character(year)]] = city_spdf
+  # }
+  # 
+  # # progress$set(message = "Developing metric scores", value = .35)
+  # 
+  # #creating the scores
+  # risk_vars = data_factors[!duplicated(as.character(data_factors))]
+  # risk_weights = rep(INITIAL_WEIGHTS, length(risk_vars))
+  # # spdf = city_all_spdf_hash[['2018']]
+  # # #data_code_book = codebook[!duplicated(codebook$risk_factor_name),]
+  # quantile_bins = QUANTILE_BINS
+  # 
+  # 
+  # ####### making initial map ######
+  # 
+  # 
+  # # progress$set(message = paste0("Designing map of ", inputs$year_range[1]), value = .40)
+  # past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+  # print(head(past_spdf@data[,-ncol(past_spdf@data)]))
+  # 
+  # # progress$set(message = paste0("Designing map of ", inputs$year_range[2]), value = .50)
+  # present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+  # print(head(present_spdf@data[,-ncol(present_spdf@data)]))
+  # 
+  #   
+  # # progress$set(message = paste0("Predicting map of ", inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), value = .60)
+  # pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
+  # present_spdf@data$pred_score = pred_list$raw_score
+  # present_spdf@data$pred_quantile = pred_list$score_quantile
+  # present_spdf@data$pred_label = pred_list$label
+  # 
+  # 
+  # 
+  # # progress$set(message = "Rendering maps", value = .70)
+  # initial_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
+  # 
+  # 
+  # 
+  # 
+  # 
+  # 
+  # 
+  # 
 ###### reactive-vals / Pass-through parameters #########
 
 #these need to be converted into a list and saved as an rds file to be maintained throughout the journey
@@ -1506,13 +1491,13 @@ observeEvent(input$map_it,{
                                                       choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                   as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
                                                       multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'),
-                  checkboxInput(inputId = 'race_circles', label = 'Race', value = FALSE, width = '71px')),
+                  div(id = 'race_circles_div', class = 'race_check_box', checkboxInput(inputId = 'race_circles', label = 'Race', value = FALSE))),
               div(id = 'home_and_year', class = 'no_big_screen',
                   div(id = 'select_year_div',  pickerInput('select_year_small',
                                                            choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                                                  as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
                                                                                      multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
-                  div(id = 'race_circles_div', checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE, width = '71px')),
+                  div(id = 'race_circles_div_small', class = 'race_check_box',checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE)),
                   
                   div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x')))
                   
@@ -1609,8 +1594,7 @@ observeEvent(input$walkthrough_legend,{
         HTML('<h5, class = "popup_text"></h5>Change the year by clicking the drop-down <span class = "no_small_screen">to the right</span>. 
              You can see the metrics for the past and present, as well as the predict overall metric for the future.</br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
-        div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
-        div(class = 'no_small_screen',actionBttn("walkthrough_layers", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
+        actionBttn("walkthrough_race", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
         # div(class = 'no_big_screen', actionButton("walkthrough_to_home", HTML("<p no_big_screen>Explore map</p>"))),
         # div(class = 'no_small_screen', actionButton("walkthrough_layers", HTML("<p no_small_screen>Next</p>")))
         
@@ -1620,11 +1604,38 @@ observeEvent(input$walkthrough_legend,{
   shinyjs::addCssClass(id = 'home_and_year', class = 'highlight-border')
   
 })
+#race
+observeEvent(input$walkthrough_race,{
+  # shinyjs::hide(id = 'initial_popup')
+  shinyjs::removeCssClass(class = 'highlight-border', selector = '.legend')
+  shinyjs::removeCssClass(id = 'select_year_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'home_and_year', class = 'highlight-border')
+  
+  output$tutorial <- renderUI({
+    div(id = 'layer_and_metrics_popup', class = "popup",
+        HTML('<h5, class = "popup_text"></h5>Toggle race & ethnicity demographics using the "Race" check box<span class = "no_small_screen"> to the right</span>. 
+             Clicking the box will display a pie chart for each community\'s demographics. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.</br>'),
+        actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
+        div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
+        div(class = 'no_small_screen',actionBttn("walkthrough_weights", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
+        )
+  })
+  shinyjs::addCssClass(id = 'race_circles_div', class = 'highlight-border')
+  shinyjs::addCssClass(id = 'race_cirlces_div_small', class = 'highlight-border')
+  updateCheckboxInput(session, inputId = 'race_circles_small', value = TRUE)
+  
+  
+})
+
+
 
 #weight adjustment
-observeEvent(input$walkthrough_layers,{
+observeEvent(input$walkthrough_weights,{
   # shinyjs::hide(id = 'initial_popup')
-  shinyjs::removeCssClass(id = 'select_year_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div_small', class = 'highlight-border')
+  
+  updateCheckboxInput(session, inputId = 'race_circles_small', value = FALSE)
   
   output$tutorial <- renderUI({
     div(id = 'layer_and_metrics_popup', class = "popup",
@@ -1647,8 +1658,12 @@ observeEvent(input$walkthrough_layers,{
 observeEvent(input$walkthrough_to_home,{
   shinyjs::removeCssClass(class = 'highlight-border', selector = '.panel.panel-info')
   updateCollapse(session, "sliders", close = 'Click here to edit weight of metrics')
+  updateCheckboxInput(session, inputId = 'race_circles_small', value = FALSE)
   
   shinyjs::removeCssClass(id = 'select_year_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div_small', class = 'highlight-border')
+  
   
   output$tutorial <- renderUI({
     div(id = 'home_popup', class = "popup",
@@ -1684,6 +1699,7 @@ observeEvent(input$close_help,{
 observeEvent(input$close_help_popups,{
   print("This should close the help popup")
   leafletProxy('map') %>% clearPopups()
+  updateCheckboxInput(session, inputId = 'race_circles_small', value = FALSE)
   output$tutorial <- renderUI({
     div(id = 'return_help_popup', class = 'help_popup', 
         actionLink('open_help', HTML('<p class = "re_open">&quest;</p>'))
@@ -1695,6 +1711,9 @@ observeEvent(input$close_help_popups,{
   shinyjs::removeCssClass(class = 'highlight-border', selector = '.legend')
   shinyjs::removeCssClass(id = 'home_button', class = 'highlight-border')
   shinyjs::removeCssClass(id = 'home_and_year', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div', class = 'highlight-border')
+  shinyjs::removeCssClass(id = 'race_circles_div_small', class = 'highlight-border')
+  
   
   
 })
@@ -1808,22 +1827,24 @@ observeEvent(input$race_circles, {
   if(input$race_circles){
     #adding in the racial demographics in the area
     present_spdf = present_spdf_react()
-    #race popup is not working at the moment. Will need to figure this out later. 
-    # race_popup = paste0('<table><tbody><tr><td class="key">white</td><td class="value">',present_spdf@data$white,
-    #                     '</td></tr><tr><td class="key">black</td><td class="value">',present_spdf@data$black,
-    #                     '</td></tr><tr><td class="key">amiaknh</td><td class="value">',present_spdf@data$amiaknh,
-    #                     '</td></tr><tr><td class="key">asian</td><td class="value">',present_spdf@data$asian,
-    #                     '</td></tr><tr><td class="key">mixed</td><td class="value">',present_spdf@data$mixed,
-    #                     '</td></tr><tr><td class="key">hispanic</td><td class="value">',present_spdf@data$hispanic,
-    #                     '</td></tr></tbody></table>')
-    
-    print(head(present_spdf@data))
+    race_pop = rowSums(present_spdf@data[,c("white", "black", "amiaknh", "asian", "hispanic")], na.rm = TRUE)
+    #race popup is now working at the moment. Will need to figure this out later. 
+    race_popup = paste0('<table><tbody><tr><td class="key">Population   :</td><td class="value">',race_pop,
+                        '</td></tr><tr><td class="key">white</td><td class="value">',round(present_spdf@data$white/race_pop, digits = 3)*100, '%',
+                        '</td></tr><tr><td class="key">black</td><td class="value">',round(present_spdf@data$black/race_pop, digits = 3)*100, '%',
+                        '</td></tr><tr><td class="key">amiaknh</td><td class="value">',round(present_spdf@data$amiaknh/race_pop, digits = 3)*100, '%',
+                        '</td></tr><tr><td class="key">asian</td><td class="value">',round(present_spdf@data$asian/race_pop, digits = 3)*100, '%',
+                        # '</td></tr><tr><td class="key">mixed</td><td class="value">',round(present_spdf@data$mixed/race_pop, digits = 3)*100, '%',
+                        '</td></tr><tr><td class="key">hispanic</td><td class="value">',round(present_spdf@data$hispanic/race_pop, digits = 3)*100, '%',
+                        '</td></tr></tbody></table>')
+    # print(head(present_spdf@data))
     leafletProxy('map') %>% leaflet.minicharts::addMinicharts(lng = present_spdf$center_lon, lat = present_spdf$center_lat, type = 'pie',
                                                             chartdata = present_spdf@data[,c("white", "black", "amiaknh", "asian",
-                                                                                             "mixed", "hispanic")],
-                                                            height = 20, width = 20, showLabels = FALSE, legend = TRUE,
+                                                                                             # "mixed", 
+                                                                                             "hispanic")],
+                                                            height = 25, width = 25, showLabels = FALSE, legend = TRUE,
                                                             legendPosition = 'bottomright',
-                                                            popup = NULL)
+                                                            popup = popupArgs(html = race_popup))
     
   }else{
     leafletProxy('map') %>% clearMinicharts() 

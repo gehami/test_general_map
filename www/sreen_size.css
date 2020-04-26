@@ -93,9 +93,15 @@ small.phone_popup{
       left: 3px;*/
   }
   #home_and_year {
-    top: 60%;
+    top: 50%;
     left: 3px;
     position: absolute;
+  }
+  .leaflet-bottom .leaflet-control {
+    margin-bottom: 5px;
+  }
+  .leaflet-right .leaflet-control {
+    margin-right: 5px;
   }
 
   
@@ -172,8 +178,24 @@ small.phone_popup{
 }
 
 
-
-
+/*handling the race check box*/
+.race_check_box{
+  display: block;
+  height: 34px;
+  padding: 0 6px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+  -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
 
 
 .shiny-notification{
