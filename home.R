@@ -1493,10 +1493,10 @@ observeEvent(input$map_it,{
                                                       multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'),
                   div(id = 'race_circles_div', class = 'race_check_box', checkboxInput(inputId = 'race_circles', label = 'Race', value = FALSE))),
               div(id = 'home_and_year', class = 'no_big_screen',
-                  div(id = 'select_year_div',  pickerInput('select_year_small',
-                                                           choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
-                                                                                                 as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
-                                                                                     multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
+                  # div(id = 'select_year_div',  pickerInput('select_year_small',
+                  #                                          choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
+                  #                                                                                as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
+                  #                                                                    multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
                   div(id = 'race_circles_div_small', class = 'race_check_box',checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE)),
                   
                   div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x')))
@@ -1574,7 +1574,9 @@ observeEvent(input$walkthrough_map_tile,{
              score from the metrics you chose. High-issue neighborhoods will be shown in red (90%ile) while low-issue 
              neighborhoods will be shown in blue (0%ile)</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
-        actionBttn("walkthrough_legend", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
+        div(class = 'no_big_screen',actionBttn("walkthrough_race", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
+        div(class = 'no_small_screen',actionBttn("walkthrough_legend", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
+        #actionBttn("walkthrough_legend", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
         # actionButton("walkthrough_legend", HTML("<p>Next</p>"))
         
         )
@@ -1614,7 +1616,7 @@ observeEvent(input$walkthrough_race,{
   output$tutorial <- renderUI({
     div(id = 'layer_and_metrics_popup', class = "popup",
         HTML('<h5, class = "popup_text"></h5>Toggle race & ethnicity demographics using the "Race" check box<span class = "no_small_screen"> to the right</span>. 
-             Clicking the box will display a pie chart for each community\'s demographics. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.</br>'),
+             Clicking the box will display a pie chart for each community\'s demographics. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.<span class = "no_big_screen"> NOTE: On a bigger screen, you can change change the year of the data. On mobile you can see the most recent published data - 2018.</span></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
         div(class = 'no_small_screen',actionBttn("walkthrough_weights", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
@@ -1623,6 +1625,7 @@ observeEvent(input$walkthrough_race,{
   shinyjs::addCssClass(id = 'race_circles_div', class = 'highlight-border')
   shinyjs::addCssClass(id = 'race_cirlces_div_small', class = 'highlight-border')
   updateCheckboxInput(session, inputId = 'race_circles_small', value = TRUE)
+  shinyjs::addCssClass(id = 'home_and_year', class = 'highlight-border')
   
   
 })
@@ -1847,7 +1850,7 @@ observeEvent(input$race_circles, {
                                                             popup = popupArgs(html = race_popup))
     
   }else{
-    leafletProxy('map') %>% clearMinicharts() 
+    leafletProxy('map') %>% leaflet.minicharts::clearMinicharts() 
   }  
 })
 #since the small phone and the big input have to have different names, this centralizes the update to impact the big input function
