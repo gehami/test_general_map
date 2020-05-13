@@ -1486,7 +1486,8 @@ observeEvent(input$map_it,{
                   # actionButton("no_walkthrough", HTML("<p>No</p>"))
               ),
               uiOutput('tutorial'),
-              div(id = 'home_button', class = 'no_small_screen', tags$a(href = '?home', icon('home', class = 'fa-3x'))),
+              div(id = 'home_button', class = 'no_small_screen', tags$a(href = '?home', icon('home', class = 'fa-3x')),
+                  div(id = 'download_button_div', downloadBttn('download_gis_data', label = 'download shapefile', size = 'sm'))),
               div(id = 'select_year_div', class = 'no_small_screen', pickerInput('select_year',
                                                       choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                                                                   as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
@@ -1671,8 +1672,9 @@ observeEvent(input$walkthrough_to_home,{
   output$tutorial <- renderUI({
     div(id = 'home_popup', class = "popup",
         HTML('<h5, class = "popup_text">Return to the home screen by clicking on the home icon.',
-             '<span class = "no_big_screen">For additional features, access this site on a larger screen.</span>',
-             'For comments, questions and custom mapping requests, contact Albert at <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>',
+             '<span class = "no_small_screen>If you like the map, you can download the raw data in shapefile format (with excel table) by clicking the download button</span>',
+             '<span class = "no_big_screen">For additional features, including <strong> downloading the map\'s raw data </strong>, access this site on a larger screen.</span>',
+             'For comments/questions, custom mapping requests and advice on other projects, contact Albert at <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>',
              '</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(actionBttn("end_walkthrough", HTML("<p>Explore map</p>"), style = 'unite', size = 'sm'))
@@ -1866,6 +1868,38 @@ observeEvent(input$race_circles_small,{
   }
 })
 
+
+output$download_gis_data <- downloadHandler(
+  filename = function(){
+    paste0(input$city, '_', Sys.Date())
+  },
+  content = function(file){
+    spdf = present_spdf_react()
+    data_excel = spdf@data
+    #create a temp folder for the shape and excel files
+    temp_shp = tempdir(check = TRUE)
+    #writing the shape files and excel files
+    writeOGR(obj = spdf, dsn = temp_shp, layer = paste0(input$city, '_shapefile_', Sys.Date()), driver = 'ESRI Shapefile', overwrite_layer = TRUE)
+    write.csv(spdf@data, file = paste0(temp_shp, '/', input$city, '_excel_', Sys.Date(), '.csv'))
+    #zip all the files
+    zip_file <- file.path(temp_shp, paste0(input$city, '_', Sys.Date(), '.zip'))
+    save_files <- list.files(temp_shp, pattern = paste0(input$city), full.names = TRUE)
+    
+    # the following zip method works for me in linux but substitute with whatever method working in your OS 
+    zip_command <- paste("zip -r", 
+                         zip_file, 
+                         paste(save_files, collapse = " "))
+    system(zip_command)
+    
+    # copy the zip file to the file argument
+    file.copy(zip_file, file)
+    # remove all the files created
+    file.remove(zip_file, save_files)
+    
+  }
+)
+
+
 ############# Updating map with updated metrics and reseting weights ##############
 
 observeEvent(input$recalculate_weights,{
@@ -1905,6 +1939,8 @@ observeEvent(input$recalculate_weights,{
   present_spdf@data$pred_label = pred_list$label
   
   progress$set(message = "Updating map", value = .60)
+  
+  present_spdf_react(present_spdf)
   
   new_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
   

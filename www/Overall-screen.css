@@ -71,6 +71,17 @@ and class = "splash_text"
 }
 
 
+#download_gis_data_bttn{
+  margin-right: 10px;
+  margin-left: 10px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+#download_button_div{
+  margin: auto;
+}
+
+
 #FAQ h5{
   font-size: 1.13em;
   padding-bottom: 15px;
