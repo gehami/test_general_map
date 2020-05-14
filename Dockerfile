@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y \
 # system library dependencies for the govGeneralMap app
 RUN apt-get update && apt-get install -y \
     libgeos++ \
-    gdal-bin
+    libgdal++ \
+    libproj++ \
+    libgeos++
 
 
 

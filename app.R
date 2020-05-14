@@ -40,9 +40,7 @@ library(sp)
 library(rgeos)
 library(shinyjs)
 library(leaflet.minicharts)
-if(!require(rgdal)){
-  print('no rgdal')
-}
+library(rgdal)
 
 # put a message in console or server log; note this happens only when the app is started!
 cat("uiStub application started...\n")
