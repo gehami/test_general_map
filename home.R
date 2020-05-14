@@ -59,7 +59,7 @@ QUANTILE_BINS = 10
 MAX_LOC_DIST = 1 #looking at neighbords directly next to tract
 
 TRACT_PAL = 'RdYlBu'
-TRACT_OPACITY = .65
+TRACT_OPACITY = .35
 SLIDER_MIN = 0
 SLIDER_MAX = 10
 INITIAL_SLIDER_VALUE = 1
@@ -484,7 +484,12 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
     # add ocean basemap
     # addProviderTiles(providers$Esri.OceanBasemap) %>%
     # add another layer with place names
-    addProviderTiles(providers$Hydda.Full) %>%
+    # addProviderTiles(leaflet::providers$OpenStreetMap) %>%
+    # addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
+    # addProviderTiles(leaflet::providers$OpenStreetMap.HOT) %>%
+    # addProviderTiles(leaflet::providers$OpenStreetMap.Mapnik) %>%
+    
+    addProviderTiles(leaflet::providers$CartoDB.DarkMatter) %>%
     # focus map in a certain area / zoom level
     setView(lng = lon_med, lat = lat_med, zoom = 12) 
   
@@ -504,7 +509,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   legend_val = u_tract_color_vals[order(u_tract_color_vals)][c(1,length(u_tract_color_vals))]
   
   map_all = map %>% addMarkers(group = 'Clear', lng = 10, lat = 10) %>% 
-    addMapPane('risk_tiles', zIndex = 1) %>%
+    addMapPane('risk_tiles', zIndex = 200) %>%
     addPolygons(data = present_spdf, fillColor = ~tract_pal(tract_color_vals), popup = present_spdf@data$label, stroke = T,
                 fillOpacity = TRACT_OPACITY, , weight = 1, opacity = 1, color = 'white', dashArray = '3',
                 highlightOptions = highlightOptions(color = 'white', weight = 2,
@@ -532,7 +537,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
   return(map_all)
 }
 
-######## Debugging setup ###########
+# ######## Debugging setup ###########
 # #libraries
 # library(shiny)
 # library(shinyWidgets)
@@ -548,170 +553,170 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
 # library(rgeos)
 # library(shinyjs)
 # library(leaflet.minicharts)
-# 
-# 
+# #
+# #
 # inputs = readRDS('inputs_outputs/debug_inputs.rds')
-# # inputs$cities = ''
-
-
-  
-  # ###### Initial set-up #######
-  # 
-  # 
-  # 
-  # #marking if it is a small city or not. If it's a small city then we need to remove all inputs that are from the CDC, since CDC does not have neighborhood data for small cities
-  # small_city = FALSE
-  # if(!(inputs$cities %in% big_cities)){
-  #   small_city = TRUE
-  #   print('small city')
-  # }
-  # 
-  # ##removing any inputs that do not apply to small cities if this is a small city
-  # if(small_city){
-  #   remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
-  #   for(i in keys(inputs)){
-  #     inputs[[i]] = inputs[[i]][which(!(inputs[[i]] %in% remove_vars))]
-  #     if(length(inputs[[i]]) == 0) inputs[[i]] = NULL
-  #   }
-  # }
-  # 
-  # 
-  # #saving inputs for debugging
-  # # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
-  # 
-  # ###### opening files and doing the things ######
-  # ####### Reading in data ########
-  # 
-  # #reading in the cdc data if it is a big city
-  # if(!small_city){
-  #   # progress$set(message = "Loading CDC data", value = .05)
-  #   if(!exists("cdc_hash")){cdc_hash = hash()}
-  #   years = seq(inputs$year_range[1], inputs$year_range[2])
-  #   for(year in years){
-  #     if(!(year %in% keys(cdc_hash))){
-  #       cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
-  #       colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
-  #       cdc_hash[[as.character(year)]] = cdc_data
-  #     }
-  #   }
-  # }else{
-  #   print("Imma smol city so I don't need CDC data")
-  # }
-  # 
-  # 
-  # #reading in the acs data. 
-  # # progress$set(message = "Loading Census data", value = .1)
-  # if(!exists("acs_hash")){acs_hash = readRDS('data_tables/acs_dat_hash.rds')}
-  # 
-  # #reading in the spatial data
-  # # progress$set(message = "Loading maps", value = .15)
-  # 
-  # #First we need to identify the tracts in the city
-  # if(!exists('city_tract_map')){city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')}
-  # tracts_in_city = city_tract_map[[inputs$cities]]
-  # #then we need to identify which counties are connected to the city so we can pull those counties into the map
-  # if(!exists('city_county_map'))city_county_map = readRDS('data_tables/city_to_county_hash.rds')
-  # #pull all the counties the city is a part of
-  # city_counties = city_county_map[[inputs$cities]]
-  # #pulls the first county the city is a part of
-  # county_map = readRDS(paste0('data_tables/All county shape data/', city_counties[1]))
-  # #pulls additional counties the city is a part of
-  # if(length(city_counties) > 1){
-  #   for(n in 2 : length(city_counties)){
-  #     county_map = rbind(county_map, readRDS(paste0('data_tables/All county shape data/', city_counties[n])))
-  #   }
-  # }
-  # #makes the tract map for all the city
-  # tracts_map = county_map[county_map$GEOID %in% tracts_in_city,]
-  # 
-  # 
-  # #checking to make sure that my ACS data holds all tracts, it does. blessings on blessings
-  # # all_tracts = hash::values(city_tract_map) %>% unlist() %>% unique()
-  # # length(all_tracts %in% acs_year$GEOID) == length(all_tracts)
-  # 
-  # 
-  # 
-  # ####### Contstants #########
-  # 
-  # param_hash = hash::copy(inputs)
-  # hash::delete(c('cities', 'year_range'), param_hash)
-  # data_factors = param_hash %>% values() %>% unlist()
-  # if(length(dim(data_factors)) > 0){
-  #   data_factors = as.character(data_factors)
-  #   names(data_factors) = rep(keys(param_hash), length(data_factors))
-  # }
-  # 
-  # 
-  # 
-  # ######## final set-ups before initial map #########
-  # 
-  # # progress$set(message = "Cleaning data", value = .30)
-  # 
-  # 
-  # city_all_dat_hash = hash::hash() 
-  # for(year in inputs$year_range[1]:inputs$year_range[2]){
-  #   acs_year = acs_hash[[as.character(year)]]
-  #   acs_year = acs_year[acs_year$GEOID %in% tracts_in_city,]
-  #   if(!small_city){
-  #     cdc_year = cdc_hash[[as.character(year)]]
-  #     cdc_year = cdc_year[cdc_year$GEOID %in% tracts_in_city,]
-  #     city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
-  #   }
-  #   else{
-  #     city_all_dat_hash[[as.character(year)]] = acs_year[!duplicated(acs_year$GEOID),]
-  #   }
-  # }
-  # 
-  # city_all_spdf_hash = hash::hash()
-  # for(year in inputs$year_range[1]:inputs$year_range[2]){
-  #   city_data = merge(tracts_map@data, city_all_dat_hash[[as.character(year)]], by = 'GEOID')
-  #   city_spdf = tracts_map[tracts_map$GEOID %in% city_data$GEOID,]
-  #   city_spdf = city_spdf[order(city_spdf$GEOID),]
-  #   city_data = city_data[order(city_data$GEOID),]
-  #   city_spdf@data = city_data
-  #   city_all_spdf_hash[[as.character(year)]] = city_spdf
-  # }
-  # 
-  # # progress$set(message = "Developing metric scores", value = .35)
-  # 
-  # #creating the scores
-  # risk_vars = data_factors[!duplicated(as.character(data_factors))]
-  # risk_weights = rep(INITIAL_WEIGHTS, length(risk_vars))
-  # # spdf = city_all_spdf_hash[['2018']]
-  # # #data_code_book = codebook[!duplicated(codebook$risk_factor_name),]
-  # quantile_bins = QUANTILE_BINS
-  # 
-  # 
-  # ####### making initial map ######
-  # 
-  # 
-  # # progress$set(message = paste0("Designing map of ", inputs$year_range[1]), value = .40)
-  # past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
-  # print(head(past_spdf@data[,-ncol(past_spdf@data)]))
-  # 
-  # # progress$set(message = paste0("Designing map of ", inputs$year_range[2]), value = .50)
-  # present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
-  # print(head(present_spdf@data[,-ncol(present_spdf@data)]))
-  # 
-  #   
-  # # progress$set(message = paste0("Predicting map of ", inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), value = .60)
-  # pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
-  # present_spdf@data$pred_score = pred_list$raw_score
-  # present_spdf@data$pred_quantile = pred_list$score_quantile
-  # present_spdf@data$pred_label = pred_list$label
-  # 
-  # 
-  # 
-  # # progress$set(message = "Rendering maps", value = .70)
-  # initial_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
-  # 
+# # # inputs$cities = ''
+# 
+# 
+# 
+#   ###### Initial set-up #######
+# 
+# 
+# 
+#   #marking if it is a small city or not. If it's a small city then we need to remove all inputs that are from the CDC, since CDC does not have neighborhood data for small cities
+#   small_city = FALSE
+#   if(!(inputs$cities %in% big_cities)){
+#     small_city = TRUE
+#     print('small city')
+#   }
+# 
+#   ##removing any inputs that do not apply to small cities if this is a small city
+#   if(small_city){
+#     remove_vars = data_code_book$risk_factor_name[data_code_book$Dataset %in% NO_SMALL_DATA]
+#     for(i in keys(inputs)){
+#       inputs[[i]] = inputs[[i]][which(!(inputs[[i]] %in% remove_vars))]
+#       if(length(inputs[[i]]) == 0) inputs[[i]] = NULL
+#     }
+#   }
+# 
+# 
+#   #saving inputs for debugging
+#   # saveRDS(inputs, 'inputs_outputs/debug_inputs.rds')
+# 
+#   ###### opening files and doing the things ######
+#   ####### Reading in data ########
+# 
+#   #reading in the cdc data if it is a big city
+#   if(!small_city){
+#     # progress$set(message = "Loading CDC data", value = .05)
+#     if(!exists("cdc_hash")){cdc_hash = hash()}
+#     years = seq(inputs$year_range[1], inputs$year_range[2])
+#     for(year in years){
+#       if(!(year %in% keys(cdc_hash))){
+#         cdc_data = readRDS(paste0('data_tables/cdc_', as.character(year), '.rds'))
+#         colnames(cdc_data)[colnames(cdc_data) == 'tractfips'] = 'GEOID'
+#         cdc_hash[[as.character(year)]] = cdc_data
+#       }
+#     }
+#   }else{
+#     print("Imma smol city so I don't need CDC data")
+#   }
+# 
+# 
+#   #reading in the acs data.
+#   # progress$set(message = "Loading Census data", value = .1)
+#   if(!exists("acs_hash")){acs_hash = readRDS('data_tables/acs_dat_hash.rds')}
+# 
+#   #reading in the spatial data
+#   # progress$set(message = "Loading maps", value = .15)
+# 
+#   #First we need to identify the tracts in the city
+#   if(!exists('city_tract_map')){city_tract_map = readRDS('data_tables/All tracts in all US cities - state WY.rds')}
+#   tracts_in_city = city_tract_map[[inputs$cities]]
+#   #then we need to identify which counties are connected to the city so we can pull those counties into the map
+#   if(!exists('city_county_map'))city_county_map = readRDS('data_tables/city_to_county_hash.rds')
+#   #pull all the counties the city is a part of
+#   city_counties = city_county_map[[inputs$cities]]
+#   #pulls the first county the city is a part of
+#   county_map = readRDS(paste0('data_tables/All county shape data/', city_counties[1]))
+#   #pulls additional counties the city is a part of
+#   if(length(city_counties) > 1){
+#     for(n in 2 : length(city_counties)){
+#       county_map = rbind(county_map, readRDS(paste0('data_tables/All county shape data/', city_counties[n])))
+#     }
+#   }
+#   #makes the tract map for all the city
+#   tracts_map = county_map[county_map$GEOID %in% tracts_in_city,]
+# 
+# 
+#   #checking to make sure that my ACS data holds all tracts, it does. blessings on blessings
+#   # all_tracts = hash::values(city_tract_map) %>% unlist() %>% unique()
+#   # length(all_tracts %in% acs_year$GEOID) == length(all_tracts)
+# 
+# 
+# 
+#   ####### Contstants #########
+# 
+#   param_hash = hash::copy(inputs)
+#   hash::delete(c('cities', 'year_range'), param_hash)
+#   data_factors = param_hash %>% values() %>% unlist()
+#   if(length(dim(data_factors)) > 0){
+#     data_factors = as.character(data_factors)
+#     names(data_factors) = rep(keys(param_hash), length(data_factors))
+#   }
+# 
+# 
+# 
+#   ######## final set-ups before initial map #########
+# 
+#   # progress$set(message = "Cleaning data", value = .30)
+# 
+# 
+#   city_all_dat_hash = hash::hash()
+#   for(year in inputs$year_range[1]:inputs$year_range[2]){
+#     acs_year = acs_hash[[as.character(year)]]
+#     acs_year = acs_year[acs_year$GEOID %in% tracts_in_city,]
+#     if(!small_city){
+#       cdc_year = cdc_hash[[as.character(year)]]
+#       cdc_year = cdc_year[cdc_year$GEOID %in% tracts_in_city,]
+#       city_all_dat_hash[[as.character(year)]] = merge(cdc_year[!duplicated(cdc_year$GEOID),], acs_year[!duplicated(acs_year$GEOID),], by = 'GEOID')
+#     }
+#     else{
+#       city_all_dat_hash[[as.character(year)]] = acs_year[!duplicated(acs_year$GEOID),]
+#     }
+#   }
+# 
+#   city_all_spdf_hash = hash::hash()
+#   for(year in inputs$year_range[1]:inputs$year_range[2]){
+#     city_data = merge(tracts_map@data, city_all_dat_hash[[as.character(year)]], by = 'GEOID')
+#     city_spdf = tracts_map[tracts_map$GEOID %in% city_data$GEOID,]
+#     city_spdf = city_spdf[order(city_spdf$GEOID),]
+#     city_data = city_data[order(city_data$GEOID),]
+#     city_spdf@data = city_data
+#     city_all_spdf_hash[[as.character(year)]] = city_spdf
+#   }
+# 
+#   # progress$set(message = "Developing metric scores", value = .35)
+# 
+#   #creating the scores
+#   risk_vars = data_factors[!duplicated(as.character(data_factors))]
+#   risk_weights = rep(INITIAL_WEIGHTS, length(risk_vars))
+#   # spdf = city_all_spdf_hash[['2018']]
+#   # #data_code_book = codebook[!duplicated(codebook$risk_factor_name),]
+#   quantile_bins = QUANTILE_BINS
+# 
+# 
+#   ####### making initial map ######
+# 
+# 
+#   # progress$set(message = paste0("Designing map of ", inputs$year_range[1]), value = .40)
+#   past_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[1])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+#   print(head(past_spdf@data[,-ncol(past_spdf@data)]))
+# 
+#   # progress$set(message = paste0("Designing map of ", inputs$year_range[2]), value = .50)
+#   present_spdf = make_full_spdf(city_all_spdf_hash[[as.character(inputs$year_range[2])]], data_code_book, risk_vars, risk_weights, QUANTILE_BINS, info_popup_text = INFO_POPUP_TEXT)
+#   print(head(present_spdf@data[,-ncol(present_spdf@data)]))
+# 
+# 
+#   # progress$set(message = paste0("Predicting map of ", inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), value = .60)
+#   pred_list = get_predicted_scores_and_labels(city_all_spdf_hash, inputs, risk_vars, risk_weights, data_code_book, QUANTILE_BINS, MAX_LOC_DIST, info_popup_text = INFO_POPUP_TEXT)
+#   present_spdf@data$pred_score = pred_list$raw_score
+#   present_spdf@data$pred_quantile = pred_list$score_quantile
+#   present_spdf@data$pred_label = pred_list$label
+# 
+# 
+# 
+#   # progress$set(message = "Rendering maps", value = .70)
+#   initial_map = make_map(present_spdf, past_spdf, inputs, TRACT_PAL, TRACT_OPACITY, QUANTILE_BINS)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
 ###### reactive-vals / Pass-through parameters #########
 
 #these need to be converted into a list and saved as an rds file to be maintained throughout the journey
