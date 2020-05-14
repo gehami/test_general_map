@@ -1904,7 +1904,7 @@ output$download_gis_data <- downloadHandler(
     writeOGR(obj = spdf, dsn = temp_shp, layer = paste0(city_state_abb, '_SF'), driver = 'ESRI Shapefile', overwrite_layer = TRUE)
     write.csv(spdf@data, file = paste0(temp_shp, '/', city_state_abb, '_XL.csv'))
     #zip all the files
-    zip_file <- file.path(temp_shp, paste0(city_state_abb,'.gz'))
+    zip_file <- file.path(temp_shp, paste0(city_state_abb,'.zip'))
     save_files <- list.files(temp_shp, pattern = city_state_abb, full.names = TRUE)
     
     # R.utils::gzip(save_files)
