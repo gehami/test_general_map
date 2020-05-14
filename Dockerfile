@@ -3,7 +3,6 @@ FROM openanalytics/r-base
 LABEL maintainer "Albert Gehami <gehami@alumni.stanford.edu>"
 
 
-
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
     sudo \
@@ -16,9 +15,12 @@ RUN apt-get update && apt-get install -y \
     libssh2-1-dev \
     libssl1.0.0
 
-# system library dependency for the govGeneralMap app
+
+# system library dependencies for the govGeneralMap app
 RUN apt-get update && apt-get install -y \
-    libgeos++   
+    libgeos++ \
+    gdal-bin
+
 
 
 # basic shiny functionality
