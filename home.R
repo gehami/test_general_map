@@ -1874,7 +1874,6 @@ observeEvent(input$race_circles_small,{
 
 ######## Downloading shapefile #########
 
-input = data.frame(city = 'San Jose CA', stringsAsFactors = FALSE)
 
 output$download_gis_data <- downloadHandler(
   filename = function(){
