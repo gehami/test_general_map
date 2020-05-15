@@ -1875,7 +1875,7 @@ observeEvent(input$race_circles_small,{
 
 output$download_gis_data <- downloadHandler(
   filename = function(){
-    paste0(input$city, '_', Sys.Date())
+    paste0(input$city, '_', Sys.Date(), '.zip')
   },
   content = function(file){
     spdf = present_spdf_react()
@@ -1919,7 +1919,8 @@ output$download_gis_data <- downloadHandler(
     # remove all the files created
     file.remove(zip_file, save_files)
     
-  }
+  },
+  contentType = 'application/zip'
 )
 
 
