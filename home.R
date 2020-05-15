@@ -140,7 +140,7 @@ in_match_order = function(vec_in, vec){
 
 
 ############# map functions ########
-#Given therisk vars, risk weights, spdf, and codebook, calculates the overall risk factor score
+#Given the risk vars, risk weights, spdf, and codebook, calculates the overall risk factor score
 calculate_score = function(risk_vars, risk_weights, spdf, data_code_book, keep_nas = FALSE){
   
   if(length(risk_vars) != length(risk_weights)){
@@ -527,7 +527,7 @@ make_map = function(present_spdf, past_spdf, inputs, TRACT_PAL = 'RdYlGn', TRACT
                 group = as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])), options = pathOptions(pane = "risk_tiles")) 
   map_all = map_all %>% 
     addLegend(colors = tract_pal(legend_val[length(legend_val):1]), opacity = 0.7, position = 'bottomright',
-              title = 'Risk factors level', labels = c('High (90%ile)', 'Low (0%ile)')) %>%
+              title = 'Need level', labels = c('High (90%ile)', 'Low (0%ile)')) %>%
     # addLayersControl(baseGroups = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
     #                                 as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1])))) %>%
     showGroup(as.character(inputs$year_range[2])) %>% hideGroup('Clear') %>% 
@@ -735,7 +735,7 @@ data_factors_react <- reactiveVal()
 initial_map_react <- reactiveVal()
 example_past_spdf_react <- reactiveVal()
 present_spdf_react <- reactiveVal()
-
+clicked_preset <- reactiveVal(FALSE)
 
 
 
@@ -762,7 +762,7 @@ output$current_page <- renderUI({
         div(class = 'splash_front',
             h1('City Equity Map', class = "splash_text"),
             HTML('<h4 class = "splash_text smaller_header">Inequity across neighborhoods has become top of mind for city planners. Some face higher poverty rates while others struggle more with medical issues.',
-                 '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out economic, health and other risk factors across neighborhoods in your city</strong></h4>',
+                 '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out economic, health and other needs across neighborhoods in your city</strong></h4>',
                  '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
                  '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
                  '<h4 class = splash_text smaller_header>Get to know the numbers behind your neighborhoods</h4>')
@@ -853,9 +853,9 @@ output$select_city <- renderUI({
   
   if(input$state != ''){
   
-  if(input$state != ''){
+  # if(input$state != ''){
     selected_cities = cities_cdc[grep(paste0(input$state, '$'), cities_cdc)][order(c(cities_cdc[grep(paste0(input$state, '$'), cities_cdc)]))]
-  }
+  # }
   
   selectizeInput(
     'city', HTML(paste0('Search for your city', '</br><small>Cities with small populations will not show health-related data due to privacy concerns</small>')), choices = selected_cities,
@@ -903,7 +903,7 @@ output$preset_buttons <- renderUI(lapply(preset_options_list, function(i){
 
 
 
-clicked_preset <- reactiveVal(FALSE)
+
 
 #if the first preset is clicked
 observeEvent(input[[preset_options[1]]], {
@@ -1047,7 +1047,7 @@ observeEvent(input$city, handlerExpr = {
   
   output$custom_metrics <- renderUI(
     div(id = 'factor_selectors', 
-        div(class = "factor_selector", 
+        div(class = "factor_selector",
             dropdownButton(
               checkboxInput('all_health_factors', "Select all"),
               checkboxGroupInput(
@@ -1073,10 +1073,10 @@ observeEvent(input$city, handlerExpr = {
             dropdownButton(
               checkboxInput('all_violence_factors', "Select all", value = FALSE),
               checkboxGroupInput(
-                'violence_factors', 'At-risk factors',
+                'violence_factors', 'Social factors',
                 choices = at_risk_input_choices, selected = violence_risk_factors
               ),
-              label = 'At-risk factors',
+              label = 'Social factors',
               circle = FALSE
             )),
         div(class = "factor_selector",
@@ -1246,14 +1246,18 @@ output$loading_sign = NULL
 output$input_warning <- renderUI(HTML("<h5>This process may take up to 60 seconds</h5>"))
 
 observeEvent(input$map_it,{
-  
+  # print(input$state)
+  print(is.null(input$city))
 
-  if(is.null(c(input$violence_factors, input$health_factors, input$economic_factors, input$qol_factors)) & !clicked_preset()){
+if(is.null(c(input$violence_factors, input$health_factors, input$economic_factors, input$qol_factors)) & !clicked_preset()){
     print("no factors present")
-    output$input_warning <- renderUI(h4("Please select at least 1 risk factor from the 4 drop-down menus above or select one of the three presets above", class = "warning_text"))
-  }else if(is.null(input$city) | input$city == ''){
-    output$input_warning <- renderUI(h4("Please select a city", class = "warning_text"))
-  }else{
+    output$input_warning <- renderUI(h4("Please select at least 1 factor from the 4 drop-down menus above or select one of the three presets above", class = "warning_text"))
+}else if(is.null(input$city)){
+    output$input_warning <- renderUI(h4("Please select a state and a city", class = "warning_text"))
+}else if(input$city == ''){
+  output$input_warning <- renderUI(h4("Please select a state and a city", class = "warning_text"))
+  }
+  else{
     shinyjs::disable('map_it')
     
     ###### Initial set-up #######
@@ -1462,8 +1466,8 @@ observeEvent(input$map_it,{
             bsCollapse(id = "sliders",
                        bsCollapsePanel(HTML('<div stlye = "width:100%;">Click here to edit weight of metrics</div>'), value = 'Click here to edit weight of metrics',
                                        fluidRow(
-                                         column(10, h4("Increase/decrease the amount each metric goes into the overall risk metric. To recalculate overall risk, click 'Submit'"),
-                                                h5("For example, boosting one metric to 2 will make it twice as important in calculating the overall risk")),
+                                         column(10, h4("Increase/decrease the amount each metric goes into the overall need metric. To recalculate overall risk / need, click 'Submit'"),
+                                                h5("For example, boosting one metric to 2 will make it twice as important in calculating the overall risk / need")),
                                          column(2, actionBttn('recalculate_weights', 'Submit'),
                                                 actionBttn('reset_weight', 'Reset weights'))
                                          # column(2, actionButton('recalculate_weights', 'Submit'))
@@ -1546,7 +1550,7 @@ observeEvent(input$walkthrough_map_nav,{
   # shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(id = 'map_tile_popup', class = "popup",
-        HTML('<h5, class = "popup_text">Clicking or tapping on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall "risk factor level" score and a breakdown for each metric chosen. A score below the 50%ile means that the risk factors you chose are less present in this neighborhood than others in the city, while a score above the 50%ile means the risk factors are more present than in the average neighborhood in the city. Learn more about these scores from the <a href = "?home">FAQ on the bottom of the home page</a></h5></br></br>'),
+        HTML('<h5, class = "popup_text">Clicking or tapping on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall "risk / need factor level" score and a breakdown for each metric chosen. A score below the 50%ile means that the factors you chose are less present in this neighborhood than others in the city, while a score above the 50%ile means the factors are more present than in the average neighborhood in the city. Learn more about these scores from the <a href = "?home">FAQ on the bottom of the home page</a></h5></br></br>'),
              # '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
              # Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
              # The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>
@@ -1619,7 +1623,7 @@ observeEvent(input$walkthrough_race,{
   output$tutorial <- renderUI({
     div(id = 'layer_and_metrics_popup', class = "popup",
         HTML('<h5, class = "popup_text"></h5>Toggle race & ethnicity demographics using the "Race" check box<span class = "no_small_screen"> to the right</span>. 
-             Clicking the box will display a pie chart for each community\'s demographics. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.<span class = "no_big_screen"> NOTE: On a bigger screen, you can change change the year of the data. On mobile you can see the most recent published data - 2018.</span></br>'),
+             Clicking the box will display a pie chart for each community\'s demographics. If the pie charts seem to clog up the map, try zooming in. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.<span class = "no_big_screen"> NOTE: On a bigger screen, you can change change the year of the data. On mobile you can see the most recent published data - 2018.</span></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
         div(class = 'no_small_screen',actionBttn("walkthrough_weights", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
@@ -1674,7 +1678,7 @@ observeEvent(input$walkthrough_to_home,{
   output$tutorial <- renderUI({
     div(id = 'home_popup', class = "popup",
         HTML('<h5, class = "popup_text">Return to the home screen by clicking on the home icon.',
-             '<span class = "no_small_screen>If you like the map, you can download the raw data in shapefile format (with excel table) by clicking the download button</span>',
+             '<span class = "no_small_screen">If you like the map, you can download the raw data in shapefile format (with excel table) by clicking the download button. </span>',
              '<span class = "no_big_screen">For additional features, including <strong> downloading the map\'s raw data </strong>, access this site on a larger screen.</span>',
              'For comments/questions, custom mapping requests and advice on other projects, contact Albert at <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>',
              '</h5></br>'),
@@ -1918,7 +1922,7 @@ output$download_gis_data <- downloadHandler(
     file.copy(zip_file, file)
     # remove all the files created
     file.remove(zip_file, save_files)
-    
+    print('downloading')
   },
   contentType = 'application/zip'
 )

@@ -2,6 +2,22 @@
   text-align: left;
 }
 
+/*changing colors from pure white*/
+body{
+  background-color: rgb(240, 240, 250);
+}
+
+.bttn-unite.bttn-default{
+  background-color: rgb(245, 245, 245);
+}
+.selectize-input{
+  background-color: rgb(245, 245, 245);
+}
+.race_check_box {
+  background-color: rgb(245, 245, 245);
+}
+
+
 
 /*Will need to instead focus on the div class = "center_wrapper"
 and class = "splash_text"

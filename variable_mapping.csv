@@ -22,7 +22,7 @@ Arthritis,CDC,arthritis_crudeprev,,arthritis_crudeprev,Arthritis,health,Arthriti
 Heart Disease,CDC,chd_crudeprev,,chd_crudeprev,Heart Disease,health,Heart Disease,of adults have heart disease,,,1,
 Cancer,CDC,cancer_crudeprev,,cancer_crudeprev,Cancer,health,Cancer,of adults have cancer,,,1,
 Adults in labor force,ACS,DP03_0002P,minus_100_b,out_of_labor_force,Adults out of labor force,economic,Adults out of labor force,of adults are out of the labor force,,1,,
-Children in poverty,ACS,DP03_0129P,,children_in_poverty,Children in poverty,economic,Children in poverty under 18 years old,of children are in poverty,,1,,1
+Children in poverty,ACS,DP03_0129P,,children_in_poverty,Children in poverty,economic,Children in poverty under 18 years old,of children are in poverty,,,,1
 Renter households,ACS,DP04_0047P,,hh_renters,Renter households,economic,Renter households,of households rent,,1,,
 Speak little to no English,ACS,DP02_0113P,,no_english,Speak little to no English,qol,Speak little to no English,of the population speak little to no english,,,,1
 Born outside the US,ACS,DP02_0093P,over_total_pop_times_100_b,foreign_born,Born outside the US,qol,Born outside the US,of the population were born outside the US,,,,
