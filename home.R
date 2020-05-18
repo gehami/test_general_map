@@ -297,7 +297,7 @@ make_label_for_score = function(risk_vars, spdf, data_code_book, quantile_bins =
       }
       #this should work now
       full_label = paste0('<div class = "top-line-popup"><b>Neighborhood zipcodes: ', gsub('(^[0-9]+\\, [0-9]+\\, [0-9]+)(\\, [[:print:]]+)', '\\1', spdf$zipcodes[row_ind]), '</b></div>',
-                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall risk metric: ', 
+                          '<div class = "top-line-popup" onclick = "popupFunction()"><b>Overall need ranking: ', 
                             suppressWarnings(get_quantile(spdf@data$score[row_ind], quantile_bins = quantile_bins, compare_vec = spdf@data$score)), "%ile</b>",#, 
                             #'<br class = "no_big_screen">'
                             HTML('<div class = "info-popup">',
@@ -1551,7 +1551,7 @@ observeEvent(input$walkthrough_map_nav,{
   # shinyjs::hide(id = 'initial_popup')
   output$tutorial <- renderUI({
     div(id = 'map_tile_popup', class = "popup",
-        HTML('<h5, class = "popup_text">Clicking or tapping on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall "risk / need factor level" score and a breakdown for each metric chosen. A score below the 50%ile means that the factors you chose are less present in this neighborhood than others in the city, while a score above the 50%ile means the factors are more present than in the average neighborhood in the city. Learn more about these scores from the <a href = "?home">FAQ on the bottom of the home page</a></h5></br></br>'),
+        HTML('<h5, class = "popup_text">Clicking or tapping on a neighborhood tile (the colored blocks on the map) will display a pop-up with the neighborhood\'s overall "need ranking" score and a breakdown for each metric chosen. A score below the 50%ile means that the need factors you chose are less present in this neighborhood than others in the city, while a score above the 50%ile means the need factors are more present than in the average neighborhood in the city. Learn more about these scores from the <a href = "?home">FAQ on the bottom of the home page</a></h5></br></br>'),
              # '<h5, class = "popup_text">This is where you will see information such as a neighborhood\'s unemployment rate, obesity rate, or any other metrics you chose to look at. 
              # Each metric is scored relative to the other neighborhoods, with lowest-scoring neighborhoods in the 0%ile and highest-scoring neighborhoods in the 90%ile. For example, if a neighborhood had one of the highest obesity rates in the city, that neighborhood would score in the 90%ile in obesity.</br>
              # The overall score combines all of the metrics you chose into one number for each neighborhood, and reflects the color of the neighborhood\'s tile</br>
