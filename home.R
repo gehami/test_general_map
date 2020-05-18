@@ -761,7 +761,7 @@ output$current_page <- renderUI({
     div(class = 'center_wrapper',
         div(class = 'splash_front',
             h1('City Equity Map', class = "splash_text"),
-            HTML('<h4 class = "splash_text smaller_header">Inequity across neighborhoods has become top of mind for city planners. Some face higher poverty rates while others struggle more with medical issues.',
+            HTML('<h4 class = "splash_text smaller_header">As COVID-19 turns from a health crisis into an economic one, equity has become top of mind for our communities. Now more than ever it is essential that city planners can identify the communities in most need to provide services quickly and effectively.',
                  '<h4 class = "splash_text smaller_header">Use this tool to <strong>map out economic, health and other needs across neighborhoods in your city</strong></h4>',
                  '<h4 class = splash_text smaller_header>City planners can <strong>improve service allocation</strong></h4>',
                  '<h4 class = splash_text smaller_header>Citizens can better <strong>understand the broader community</strong></h4>',
