@@ -93,8 +93,8 @@ small.phone_popup{
       left: 3px;*/
   }
   #home_and_year {
-    top: 50%;
-    left: 3px;
+    top: 14%;
+    left: 1vw;
     position: absolute;
   }
   .leaflet-bottom .leaflet-control {

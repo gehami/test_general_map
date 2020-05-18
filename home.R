@@ -834,7 +834,7 @@ output$current_page <- renderUI({
              '<h5><strong>A: </strong>You can reach me at my email address (<a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a>) for any custom mapping requests or for partnership on a city-specific project.</h5>'
              
         ),
-HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://www.census.gov/programs-surveys/acs"> US Census American Community Survey </a> and the <a href = "https://www.cdc.gov/500cities/index.htm">CDC\'s 500 Cities Project</a>. All metrics are scored from low-issue (0%ile) to high-issue (90%ile).</h5>',
+HTML('<h5 class = "splash_text smaller_header">Data from the <a href = "https://www.census.gov/programs-surveys/acs"> US Census American Community Survey </a> and the <a href = "https://www.cdc.gov/500cities/index.htm">CDC\'s 500 Cities Project</a>. All metrics are scored from low-need (0%ile) to high-need (90%ile).</h5>',
      '<h5 class = "splash_text smaller_header">For comments, questions, and custom-mapping requests, contact Albert Gehami at 
      <a href = "mailto: gehami@alumni.stanford.edu">gehami@alumni.stanford.edu</a></h5>')
 
@@ -1500,13 +1500,14 @@ if(is.null(c(input$violence_factors, input$health_factors, input$economic_factor
                                                       multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px'),
                   div(id = 'race_circles_div', class = 'race_check_box', checkboxInput(inputId = 'race_circles', label = 'Race', value = FALSE))),
               div(id = 'home_and_year', class = 'no_big_screen',
+                  div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x'))),
                   # div(id = 'select_year_div',  pickerInput('select_year_small',
                   #                                          choices = c('Clear', as.character(inputs$year_range[1]), as.character(inputs$year_range[2]),
                   #                                                                                as.character(inputs$year_range[2] + (inputs$year_range[2] - inputs$year_range[1]))),
                   #                                                                    multiple = FALSE, selected = as.character(inputs$year_range[2]), width = '71px')),
-                  div(id = 'race_circles_div_small', class = 'race_check_box',checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE)),
+                  div(id = 'race_circles_div_small', class = 'race_check_box',checkboxInput(inputId = 'race_circles_small', label = 'Race', value = FALSE))
                   
-                  div(id = 'home_button', tags$a(href = '?home', icon('home', class = 'fa-3x')))
+
                   
                   )
           )
@@ -1535,9 +1536,9 @@ observeEvent(input$walkthrough,{
   output$tutorial <- renderUI({
     div(class = "popup",
         HTML('<h5, class = "popup_text">Here is the map of your city based on the metrics you chose.</h5></br>',
-             '<h5, class = "popup_text">The map is divided into <a href = "https://simplyanalytics.zendesk.com/hc/en-us/articles/204848916-What-is-a-census-tract-" target="_blank">census tracts</a>, which are similar to neighborhoods</h5></br>',
+             '<h5, class = "popup_text">The map is divided into <a href = "https://simplyanalytics.zendesk.com/hc/en-us/articles/204848916-What-is-a-census-tract-" target="_blank">census tracts</a>, which are similar to neighborhoods in size and shape.</h5></br>',
              '<h5, class = "popup_text">Click-and-drag map to move around (or swipe on mobile).</h5></br>',
-             '<h5, class = "popup_text">Scroll to zoom in and out (or pinch on mobile)</h5></br>'),
+             '<h5, class = "popup_text">Scroll to zoom in and out (or pinch on mobile).</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         actionBttn("walkthrough_map_nav", HTML("<p>Next</p>"), style = 'unite', size = 'sm')
         # actionButton("walkthrough_map_nav", HTML("<p>Next</p>"))
@@ -1578,8 +1579,7 @@ observeEvent(input$walkthrough_map_tile,{
   output$tutorial <- renderUI({
     div(id = 'legend_popup', class = "popup",
         HTML('<h5, class = "popup_text">Below is the map\'s legend. Each neighborhood is colored based on its overall 
-             score from the metrics you chose. High-issue neighborhoods will be shown in red (90%ile) while low-issue 
-             neighborhoods will be shown in blue (0%ile)</h5></br>'),
+             score from the metrics you chose. High-need neighborhoods will be shown in red (90%ile) while low-need neighborhoods will be shown in blue (0%ile)</h5></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(class = 'no_big_screen',actionBttn("walkthrough_race", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
         div(class = 'no_small_screen',actionBttn("walkthrough_legend", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))

@@ -91,7 +91,7 @@
 
 /*Bringing the tutorial back*/
 #return_help_popup {
-  left: 1vh;
+  left: 1vw;
   /*margin-top: 20%;*/
   top: 85%;
   height: auto;
