@@ -53,6 +53,7 @@ server <- function(input, output, session) {
   
   # build menu; same on all pages
   output$uiStub <- renderUI(tagList(             # a single-output stub ui basically lets you
+    tags$head(includeHTML('www/google-analytics.html')),
     tags$link(rel = "stylesheet", type = "text/css", href = "screen_size.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "popup.css"),
     tags$link(rel = "stylesheet", type = "text/css", href = "Overall-screen.css"),
