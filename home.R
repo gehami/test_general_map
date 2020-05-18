@@ -1623,7 +1623,7 @@ observeEvent(input$walkthrough_race,{
   output$tutorial <- renderUI({
     div(id = 'layer_and_metrics_popup', class = "popup",
         HTML('<h5, class = "popup_text"></h5>Toggle race & ethnicity demographics using the "Race" check box<span class = "no_small_screen"> to the right</span>. 
-             Clicking the box will display a pie chart for each community\'s demographics. If the pie charts seem to clog up the map, try zooming in. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.<span class = "no_big_screen"> NOTE: On a bigger screen, you can change change the year of the data. On mobile you can see the most recent published data - 2018.</span></br>'),
+             Clicking the box will display a pie chart for each community\'s demographics. The pie chart is located at the <i>population center</i> for each neighborhood, rather than the geographic center. If the pie charts seem to clog up the map, try zooming in. Like the map tiles, clicking on a pie chart will show its population count and racial breakdown.<span class = "no_big_screen"> NOTE: On a bigger screen, you can change change the year of the data. On mobile you can see the most recent published data - 2018.</span></br>'),
         actionLink('close_help_popups', label = HTML('<p class="close">&times;</p>')),
         div(class = 'no_big_screen',actionBttn("walkthrough_to_home", HTML("<p no_big_screen>Next</p>"), style = 'unite', size = 'sm')),
         div(class = 'no_small_screen',actionBttn("walkthrough_weights", HTML("<p no_small_screen>Next</p>"), style = 'unite', size = 'sm'))
